@@ -1,0 +1,36 @@
+AARAV MENON
+B.Tech Computer Science and Engineering, VIT Vellore, 2026
+aarav.menon@example.com | github.com/aaravmenon | Vellore, Tamil Nadu
+
+EDUCATION
+VIT Vellore - B.Tech CSE, CGPA 8.6/10, 2022-2026
+Relevant coursework: DBMS (A), Operating Systems (B), Computer Networks (A),
+Data Structures and Algorithms (A), Software Engineering (B)
+
+EXPERIENCE
+Zeta - Backend Engineering Intern, May 2025 - July 2025
+Built internal tooling for the reconciliation team using Python and Django.
+Improved performance significantly.
+Wrote scripts that reduced a manual reporting step from 40 minutes to 4.
+
+PROJECTS
+Campus Mess Portal - Django, PostgreSQL, deployed, 400 monthly users
+Rewrote the daily menu aggregation query; runtime went from 2.1s to 240ms.
+Handles authentication, ordering and a weekly feedback loop.
+github.com/aaravmenon/mess-portal
+
+Weather CLI - Python
+A command line tool that fetches and caches forecasts.
+
+Smart India Hackathon 2025 - Finalist, backend lead for a team of 6
+Designed the API surface and the Postgres schema for a logistics tracker.
+
+SKILLS
+Languages: Python, JavaScript, SQL, C
+Frameworks: Django, Flask, React
+Tools: Git, Linux, PostgreSQL, Nginx
+Familiar with Docker
+
+ACHIEVEMENTS
+Smart India Hackathon 2025 finalist
+Solved 340 problems on competitive programming platforms

@@ -1,0 +1,1014 @@
+<title>SkillForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Colors */
+  --color-void:#08090a;
+  --color-carbon:#0f1011;
+  --color-obsidian:#161718;
+  --color-graphite:#23252a;
+  --color-smoke:#383b3f;
+  --color-ash:#62666d;
+  --color-fog:#8a8f98;
+  --color-mist:#d0d6e0;
+  --color-bone:#e5e5e6;
+  --color-paper:#ffffff;
+  --color-acid-lime:#e4f222;
+  --color-pulse-green:#27a644;
+  --color-coral-red:#eb5757;
+  --color-signal-teal:#02b8cc;
+  --color-iris-violet:#6366f1;
+  --color-lavender:#8b5cf6;
+
+  --font-inter-variable:'Inter','Inter Variable',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-berkeley-mono:'Berkeley Mono','JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+
+  --spacing-4:4px; --spacing-8:8px; --spacing-12:12px; --spacing-16:16px;
+  --spacing-20:20px; --spacing-24:24px; --spacing-32:32px; --spacing-40:40px;
+  --spacing-48:48px; --spacing-64:64px; --spacing-80:80px; --spacing-96:96px;
+
+  --page-max-width:1200px;
+  --section-gap:96px;
+  --card-padding:24px;
+  --element-gap:8px;
+
+  --radius-cards:12px;
+  --radius-pills:9999px;
+  --radius-small:2px;
+  --radius-badges:4px;
+  --radius-inputs:6px;
+  --radius-buttons:6px;
+
+  --shadow-sm:rgba(0,0,0,.4) 0px 2px 4px 0px;
+  --shadow-subtle:rgb(35,37,42) 0px 0px 0px 1px inset;
+  --shadow-xl:rgba(8,9,10,.6) 0px 4px 32px 0px;
+  --shadow-lime:rgba(0,0,0,.01) 0px 5px 2px 0px,rgba(0,0,0,.04) 0px 3px 2px 0px,rgba(0,0,0,.07) 0px 1px 1px 0px,rgba(0,0,0,.08) 0px 0px 1px 0px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--color-void);
+  color:var(--color-mist);
+  font-family:var(--font-inter-variable);
+  font-size:16px;
+  font-weight:400;
+  line-height:1.5;
+  font-feature-settings:"cv01" on,"ss03" on,"zero" on;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--color-acid-lime);color:var(--color-void)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:1px solid var(--color-mist);outline-offset:2px;border-radius:var(--radius-small)}
+
+.container{max-width:var(--page-max-width);margin:0 auto;padding-left:var(--spacing-24);padding-right:var(--spacing-24)}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{margin:0;font-weight:510;color:var(--color-paper)}
+.t-display{font-size:72px;line-height:1;letter-spacing:-.022em}
+.t-hero{font-size:64px;line-height:1;letter-spacing:-.022em}
+.t-section{font-size:48px;line-height:1;letter-spacing:-.022em}
+.t-sub{font-size:32px;line-height:1.13;letter-spacing:-.022em;font-weight:400}
+.t-head{font-size:24px;line-height:1.33;letter-spacing:-.012em;font-weight:400}
+.t-body-lg{font-size:20px;line-height:1.33;letter-spacing:-.012em;font-weight:400;color:var(--color-mist)}
+.t-body{font-size:16px;line-height:1.5;font-weight:400;color:var(--color-fog)}
+.t-body-sm{font-size:15px;line-height:1.6;letter-spacing:-.011em;color:var(--color-fog)}
+.t-caption{font-size:13px;line-height:1.2;color:var(--color-fog)}
+.t-label{font-size:12px;line-height:1.4;color:var(--color-fog)}
+.t-micro{font-size:10px;line-height:1.5;font-weight:510;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ash)}
+.mono{font-family:var(--font-berkeley-mono);font-size:12px;letter-spacing:-.013em;font-variant-numeric:tabular-nums}
+.paper{color:var(--color-paper)}
+.fog{color:var(--color-fog)}
+.ash{color:var(--color-ash)}
+
+/* ---------- chrome ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(8,9,10,.72);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--color-graphite);
+}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:56px;gap:var(--spacing-24)}
+.logo{display:flex;align-items:center;gap:var(--spacing-8);font-size:16px;font-weight:510;color:var(--color-paper);letter-spacing:-.011em}
+.nav-links{display:flex;align-items:center;gap:var(--spacing-8)}
+.nav-links a{padding:var(--spacing-8) var(--spacing-12);font-size:13px;color:var(--color-mist);border-radius:var(--radius-buttons)}
+.nav-links a:hover{color:var(--color-paper)}
+.nav-right{display:flex;align-items:center;gap:var(--spacing-12)}
+
+.btn-lime{
+  display:inline-flex;align-items:center;gap:var(--spacing-8);
+  background:var(--color-acid-lime);color:var(--color-void);
+  border-radius:var(--radius-buttons);padding:10px 16px;
+  font-size:14px;font-weight:510;letter-spacing:-.011em;box-shadow:var(--shadow-lime);
+}
+.btn-lime:hover{background:#eef84a}
+.btn-pill{
+  display:inline-flex;align-items:center;
+  background:var(--color-paper);color:var(--color-void);
+  border-radius:var(--radius-pills);padding:8px 16px;
+  font-size:13px;font-weight:510;letter-spacing:-.011em;
+}
+.btn-pill:hover{background:var(--color-bone)}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:var(--spacing-8);
+  border:1px solid var(--color-graphite);color:var(--color-mist);
+  border-radius:var(--radius-buttons);padding:8px 12px;font-size:13px;
+}
+.btn-ghost:hover{border-color:var(--color-smoke);color:var(--color-paper)}
+.link-arrow{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--color-mist);letter-spacing:-.011em}
+.link-arrow:hover{color:var(--color-paper)}
+.link-arrow svg{transition:transform .18s ease}
+.link-arrow:hover svg{transform:translateX(3px)}
+
+main{display:flex;flex-direction:column;gap:var(--section-gap);padding-bottom:var(--spacing-96)}
+
+/* ---------- hero ---------- */
+.hero{padding-top:var(--spacing-96);position:relative}
+.hero-copy{max-width:760px;display:flex;flex-direction:column;gap:var(--spacing-24)}
+.eyebrow-pill{
+  align-self:flex-start;display:inline-flex;align-items:center;gap:var(--spacing-8);
+  background:rgba(255,255,255,.05);color:var(--color-mist);
+  border-radius:var(--radius-pills);padding:4px 12px;font-size:12px;
+}
+.eyebrow-pill .tick{width:5px;height:5px;border-radius:50%;background:var(--color-acid-lime)}
+.hero h1{text-wrap:balance}
+.hero-sub{max-width:60ch}
+.hero-actions{display:flex;align-items:center;gap:var(--spacing-16);flex-wrap:wrap}
+
+.hero-stage{position:relative;margin-top:var(--spacing-48)}
+.hero-floor{
+  position:absolute;left:-2%;right:-2%;bottom:-40px;height:70%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(8,9,10,0) 10%,rgba(208,214,224,.10) 100%);
+  border-radius:var(--radius-cards);
+}
+
+/* ---------- sections ---------- */
+.sec-head{max-width:640px;display:flex;flex-direction:column;gap:var(--spacing-16)}
+.sec-head .t-micro{margin-bottom:-8px}
+.split{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:var(--spacing-64);align-items:center}
+.split.rev{grid-template-columns:minmax(0,1fr) minmax(0,380px)}
+.split.rev .split-copy{order:2}
+.stack-md{display:flex;flex-direction:column;gap:var(--spacing-24)}
+.stack-sm{display:flex;flex-direction:column;gap:var(--spacing-12)}
+.notes{display:flex;flex-direction:column;gap:var(--spacing-12);border-top:1px solid var(--color-graphite);padding-top:var(--spacing-16)}
+.note{display:flex;gap:var(--spacing-12);align-items:baseline}
+.note .k{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash);flex:none;width:34px}
+.note p{margin:0;font-size:15px;line-height:1.6;letter-spacing:-.011em;color:var(--color-fog)}
+.note p b{color:var(--color-mist);font-weight:510}
+
+/* ---------- logo strip ---------- */
+.strip{display:flex;flex-direction:column;gap:var(--spacing-24);align-items:center;text-align:center}
+.strip-row{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--spacing-48);color:var(--color-fog)}
+.strip-row span{font-size:15px;font-weight:510;letter-spacing:-.011em}
+
+/* ---------- product frame ---------- */
+.frame{
+  position:relative;background:var(--color-carbon);border-radius:var(--radius-cards);
+  box-shadow:var(--shadow-subtle),var(--shadow-xl);overflow:hidden;
+}
+.app-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-16);
+  padding:var(--spacing-12) var(--spacing-16);border-bottom:1px solid var(--color-graphite);
+}
+.crumb{display:flex;align-items:center;gap:var(--spacing-8);font-size:13px;color:var(--color-mist)}
+.crumb .sep{color:var(--color-smoke)}
+.crumb .dim{color:var(--color-fog)}
+.bar-tools{display:flex;align-items:center;gap:var(--spacing-8)}
+.tool{
+  display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);
+  color:var(--color-mist);border-radius:var(--radius-pills);padding:4px 12px;font-size:12px;
+}
+.kbd{
+  font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-fog);
+  border:1px solid var(--color-graphite);border-radius:var(--radius-badges);padding:1px 5px;
+}
+.app-body{display:grid;grid-template-columns:180px minmax(0,1fr)}
+.app-body.solo{grid-template-columns:minmax(0,1fr)}
+.app-side{border-right:1px solid var(--color-graphite);padding:var(--spacing-12) var(--spacing-8);display:flex;flex-direction:column;gap:2px}
+.side-lbl{padding:var(--spacing-8) var(--spacing-12) var(--spacing-4)}
+.side-item{
+  display:flex;align-items:center;gap:var(--spacing-8);width:100%;text-align:left;
+  padding:6px var(--spacing-12);border-radius:var(--radius-buttons);
+  font-size:13px;color:var(--color-fog);position:relative;
+}
+.side-item:hover{background:rgba(255,255,255,.03);color:var(--color-mist)}
+.side-item[aria-current="true"]{background:rgba(255,255,255,.05);color:var(--color-paper)}
+.side-item[aria-current="true"]::before{
+  content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:2px;height:14px;background:var(--color-acid-lime);border-radius:var(--radius-small);
+}
+.side-item .g{width:12px;height:12px;flex:none;border:1px solid currentColor;border-radius:var(--radius-small);opacity:.7}
+.side-item .n{margin-left:auto;font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash)}
+.app-main{padding:var(--spacing-16)}
+.app-hd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--spacing-16);padding:0 var(--spacing-8) var(--spacing-12)}
+
+/* ---------- badges ---------- */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.05);color:var(--color-fog);
+  border-radius:var(--radius-badges);padding:0 6px;font-size:12px;line-height:1.7;white-space:nowrap;
+}
+.badge .d{width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.ok{color:var(--color-pulse-green)}
+.badge.err{color:var(--color-coral-red)}
+.badge.tag{color:var(--color-iris-violet)}
+.badge.alt{color:var(--color-lavender)}
+.badge.info{color:var(--color-signal-teal)}
+.badge.lime{color:var(--color-acid-lime)}
+
+/* ---------- gap gauge (signature) ---------- */
+.gauges{display:flex;flex-direction:column}
+.gauge{padding:var(--spacing-12) var(--spacing-8);border-top:1px solid rgba(35,37,42,.7)}
+.gauge:first-child{border-top:none}
+.gauge:hover{background:rgba(255,255,255,.02)}
+.g-hd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--spacing-12)}
+.g-name{font-size:13px;color:var(--color-mist);letter-spacing:-.01em}
+.g-val{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash);white-space:nowrap}
+.g-val b{color:var(--color-paper);font-weight:400}
+.g-val i{font-style:normal;color:var(--color-mist)}
+.track{
+  position:relative;height:8px;margin:var(--spacing-8) 0;border-radius:var(--radius-small);
+  background:rgba(255,255,255,.03);box-shadow:var(--shadow-subtle);
+}
+.track .have,.track .gap{position:absolute;top:0;bottom:0;transform-origin:left;border-radius:var(--radius-small)}
+.track .have{left:0;background:var(--color-mist);animation:grow .8s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(var(--i)*.05s)}
+.track .gap{background:repeating-linear-gradient(135deg,transparent 0 3px,rgba(255,255,255,.16) 3px 4px);animation:grow .8s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(.18s + var(--i)*.05s)}
+.track .notch{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--color-paper)}
+.track .notch::after{
+  content:"";position:absolute;top:-4px;left:-2px;width:0;height:0;
+  border-left:2.5px solid transparent;border-right:2.5px solid transparent;border-top:4px solid var(--color-paper);
+}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.g-ft{display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-12)}
+.g-ft span:first-child{font-size:12px;color:var(--color-ash)}
+.g-ft .wks{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-fog);white-space:nowrap}
+.legend{
+  display:flex;flex-wrap:wrap;gap:var(--spacing-24);align-items:center;
+  padding:var(--spacing-12) var(--spacing-8) 0;margin-top:var(--spacing-8);
+  border-top:1px solid var(--color-graphite);
+}
+.lg{display:flex;align-items:center;gap:var(--spacing-8);font-size:12px;color:var(--color-ash)}
+.lg i{display:block;width:18px;height:8px;border-radius:var(--radius-small)}
+.lg i.solid{background:var(--color-mist)}
+.lg i.hatch{background:repeating-linear-gradient(135deg,transparent 0 3px,rgba(255,255,255,.16) 3px 4px);box-shadow:var(--shadow-subtle)}
+.lg i.mark{width:1px;height:12px;background:var(--color-paper);border-radius:0}
+
+/* ---------- intake ---------- */
+.intake{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--spacing-16);padding:var(--spacing-16)}
+.subcard{background:rgba(255,255,255,.02);border-radius:var(--radius-inputs);box-shadow:var(--shadow-sm);padding:var(--spacing-12)}
+.file-row{display:flex;gap:var(--spacing-12);align-items:center}
+.file-ico{
+  width:32px;height:40px;flex:none;border-radius:var(--radius-badges);
+  background:var(--color-obsidian);box-shadow:var(--shadow-subtle);
+  display:grid;place-items:center;font-family:var(--font-berkeley-mono);font-size:10px;color:var(--color-ash);
+}
+.plog{list-style:none;margin:var(--spacing-12) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--spacing-4)}
+.plog li{display:flex;align-items:center;gap:var(--spacing-8);font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-fog);animation:fade .3s ease both;animation-delay:calc(.2s + var(--i)*.14s)}
+.plog li .ck{color:var(--color-pulse-green)}
+.plog li .v{margin-left:auto;color:var(--color-mist)}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.chips{display:flex;flex-wrap:wrap;gap:var(--spacing-4);margin-top:var(--spacing-8)}
+.chip{
+  font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-fog);
+  background:rgba(255,255,255,.05);border-radius:var(--radius-badges);padding:1px 6px;
+  animation:fade .3s ease both;
+}
+.chip.new{color:var(--color-iris-violet)}
+.evidence{list-style:none;margin:var(--spacing-8) 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.evidence li{display:flex;align-items:baseline;gap:var(--spacing-8);font-size:13px;color:var(--color-fog)}
+.evidence li b{color:var(--color-mist);font-weight:510}
+.evidence li .m{margin-left:auto;font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash)}
+.flagline{display:flex;gap:var(--spacing-12);padding:var(--spacing-12) 0;border-top:1px solid rgba(35,37,42,.7)}
+.flagline:first-child{border-top:none;padding-top:0}
+.flagline .loc{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash);flex:none;width:52px}
+.flagline p{margin:0;font-size:13px;line-height:1.5;color:var(--color-fog)}
+.flagline p b{color:var(--color-mist);font-weight:510}
+.roles{display:flex;flex-wrap:wrap;gap:var(--spacing-8);margin-top:var(--spacing-12)}
+.role{background:rgba(255,255,255,.05);color:var(--color-fog);border-radius:var(--radius-pills);padding:4px 12px;font-size:12px}
+.role[aria-pressed="true"]{background:var(--color-paper);color:var(--color-void)}
+.role:hover{color:var(--color-mist)}
+.role[aria-pressed="true"]:hover{color:var(--color-void)}
+
+/* ---------- roadmap ---------- */
+.rm-scroll{overflow-x:auto}
+.rm{min-width:880px}
+.rm-weeks{display:grid;grid-template-columns:168px repeat(14,1fr);border-bottom:1px solid var(--color-graphite)}
+.rm-weeks span{
+  font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash);
+  text-align:center;padding:var(--spacing-8) 0;
+}
+.rm-weeks span:first-child{text-align:left;padding-left:var(--spacing-16);color:var(--color-fog)}
+.rm-lane{padding:var(--spacing-12) 0;border-bottom:1px solid rgba(35,37,42,.7)}
+.rm-lane:last-child{border-bottom:none}
+.rm-lane-hd{padding:0 var(--spacing-16) var(--spacing-8)}
+.rm-row{display:grid;grid-template-columns:168px repeat(14,1fr);align-items:center;min-height:28px}
+.rm-lbl{padding:0 var(--spacing-12) 0 var(--spacing-16);font-size:13px;color:var(--color-fog);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-bars{
+  grid-column:2/-1;display:grid;grid-template-columns:repeat(14,1fr);align-items:center;height:100%;
+  background-image:linear-gradient(90deg,rgba(35,37,42,.55) 0 1px,transparent 1px);
+  background-size:calc(100%/14) 100%;
+}
+.bar-i{
+  height:20px;border-radius:var(--radius-badges);display:flex;align-items:center;
+  padding:0 var(--spacing-8);font-size:12px;white-space:nowrap;overflow:hidden;
+  transform-origin:left;animation:grow .55s cubic-bezier(.2,.85,.25,1) both;animation-delay:calc(var(--i)*.04s);
+}
+.bar-i.close{background:rgba(99,102,241,.22);color:#a5a7f7;box-shadow:rgba(99,102,241,.35) 0 0 0 1px inset}
+.bar-i.build{background:rgba(39,166,68,.18);color:#5cc97a;box-shadow:rgba(39,166,68,.32) 0 0 0 1px inset}
+.bar-i.drill{background:rgba(255,255,255,.04);color:var(--color-fog);box-shadow:var(--shadow-subtle)}
+.bar-i.mile{background:rgba(235,87,87,.20);color:#f08585;box-shadow:rgba(235,87,87,.38) 0 0 0 1px inset;justify-content:center;padding:0 4px}
+
+/* ---------- practice ---------- */
+.prac{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--spacing-16);padding:var(--spacing-16)}
+.list{display:flex;flex-direction:column}
+.item{padding:var(--spacing-12) var(--spacing-8);border-top:1px solid rgba(35,37,42,.7)}
+.item:first-child{border-top:none}
+.item:hover{background:rgba(255,255,255,.02)}
+.item-hd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--spacing-12)}
+.item-hd h4{font-size:14px;font-weight:510;color:var(--color-mist);letter-spacing:-.01em}
+.item p{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--color-fog)}
+.item-ft{display:flex;flex-wrap:wrap;align-items:center;gap:var(--spacing-8);margin-top:var(--spacing-8)}
+.q-ask{display:flex;flex-wrap:wrap;align-items:center;gap:var(--spacing-8);margin-top:var(--spacing-8)}
+.q-ask .src{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-ash)}
+
+/* ---------- progress ---------- */
+.pg{display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--spacing-16);padding:var(--spacing-16)}
+.score{display:flex;flex-direction:column;justify-content:center;gap:var(--spacing-4);padding:var(--spacing-20)}
+.score .big{font-size:64px;line-height:1;letter-spacing:-.022em;color:var(--color-paper);font-weight:510;font-variant-numeric:tabular-nums}
+.chartbox{padding:var(--spacing-16)}
+.chartbox svg{width:100%;height:auto;display:block;overflow:visible}
+.xr{display:flex;justify-content:space-between;margin-top:var(--spacing-8)}
+.pg2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--spacing-16);padding:0 var(--spacing-16) var(--spacing-16)}
+.mini{position:relative;height:6px;margin-top:6px;border-radius:var(--radius-small);background:rgba(255,255,255,.03);box-shadow:var(--shadow-subtle)}
+.mini i{position:absolute;left:0;top:0;bottom:0;background:var(--color-mist);border-radius:var(--radius-small)}
+.mini u{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--color-paper);text-decoration:none}
+.mv{display:flex;gap:var(--spacing-12);padding:var(--spacing-12) var(--spacing-8);border-top:1px solid rgba(35,37,42,.7)}
+.mv:first-child{border-top:none}
+.mv .delta{font-family:var(--font-berkeley-mono);font-size:12px;color:var(--color-pulse-green);flex:none;width:38px;text-align:right;padding-top:2px}
+.mv .delta.flat{color:var(--color-ash)}
+.mv p{margin:0;font-size:13px;line-height:1.5;color:var(--color-fog)}
+.mv p b{color:var(--color-mist);font-weight:510}
+.streak{display:grid;grid-template-columns:repeat(26,1fr);gap:3px;padding:var(--spacing-12) var(--spacing-8) 0}
+.streak i{aspect-ratio:1;border-radius:var(--radius-small);background:rgba(255,255,255,.035)}
+.streak i[data-l="1"]{background:rgba(208,214,224,.18)}
+.streak i[data-l="2"]{background:rgba(208,214,224,.38)}
+.streak i[data-l="3"]{background:rgba(208,214,224,.62)}
+.streak i[data-l="4"]{background:var(--color-mist)}
+
+/* ---------- closing ---------- */
+.cta{
+  border-radius:var(--radius-cards);background:var(--color-carbon);box-shadow:var(--shadow-subtle);
+  padding:var(--spacing-64) var(--spacing-48);display:flex;flex-direction:column;gap:var(--spacing-24);align-items:flex-start;
+}
+.foot{border-top:1px solid var(--color-graphite);padding-top:var(--spacing-32)}
+.foot-in{display:flex;flex-wrap:wrap;gap:var(--spacing-32);justify-content:space-between;align-items:flex-start}
+.foot-col{display:flex;flex-direction:column;gap:var(--spacing-8)}
+.foot-col a{font-size:13px;color:var(--color-fog)}
+.foot-col a:hover{color:var(--color-mist)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1000px){
+  .t-hero{font-size:48px;letter-spacing:-.022em}
+  .t-section{font-size:32px}
+  .split,.split.rev{grid-template-columns:1fr;gap:var(--spacing-32)}
+  .split.rev .split-copy{order:0}
+  .intake,.prac,.pg,.pg2{grid-template-columns:1fr}
+  .app-body{grid-template-columns:1fr}
+  .app-side{display:none}
+  .nav-links{display:none}
+}
+@media (max-width:640px){
+  :root{--section-gap:64px}
+  .t-hero{font-size:40px}
+  .streak{grid-template-columns:repeat(13,1fr)}
+  .cta{padding:var(--spacing-32) var(--spacing-24)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-delay:0ms!important;transition-duration:.001ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+
+<nav class="nav">
+  <div class="container nav-in">
+    <a class="logo" href="#top">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+        <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="none" stroke="#ffffff" stroke-width="1"/>
+        <path d="M3.5 12 L6.8 6.6 L9.4 9.2 L12.5 4" fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SkillForge
+    </a>
+    <div class="nav-links">
+      <a href="#skillmap">Skill map</a>
+      <a href="#intake">Resume intake</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#practice">Practice</a>
+      <a href="#progress">Progress</a>
+    </div>
+    <div class="nav-right">
+      <a class="nav-link t-caption fog" href="#cta" style="padding:8px 12px">Sign in</a>
+      <a class="btn-pill" href="#cta">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero container" id="skillmap">
+    <div class="hero-copy">
+      <span class="eyebrow-pill"><i class="tick"></i>Campus placements 2026 — 14 weeks out</span>
+      <h1 class="t-hero">Measure the gap.<br>Then close it.</h1>
+      <p class="t-body-lg hero-sub">SkillForge reads your resume, measures every skill against the role you're
+        actually chasing, and returns the shortest honest path to ready.</p>
+      <div class="hero-actions">
+        <a class="btn-lime" href="#cta">Analyze my resume</a>
+        <a class="link-arrow" href="#intake">See a sample report
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2.5 6h7M6.5 3l3 3-3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-stage">
+      <div class="hero-floor"></div>
+      <div class="frame">
+        <div class="app-bar">
+          <div class="crumb">
+            <span class="dim">Aarav Menon</span><span class="sep">/</span><span>Skill map</span>
+            <span class="badge tag" style="margin-left:8px"><i class="d"></i>Backend engineer</span>
+          </div>
+          <div class="bar-tools">
+            <span class="tool">340 job descriptions</span>
+            <span class="tool">Updated 13 Aug</span>
+            <span class="kbd">⌘K</span>
+          </div>
+        </div>
+        <div class="app-body">
+          <aside class="app-side">
+            <div class="side-lbl t-micro">Workspace</div>
+            <button class="side-item" type="button"><i class="g"></i>Intake<span class="n">3</span></button>
+            <button class="side-item" type="button" aria-current="true"><i class="g"></i>Skill map<span class="n">12</span></button>
+            <button class="side-item" type="button"><i class="g"></i>Roadmap<span class="n">14w</span></button>
+            <button class="side-item" type="button"><i class="g"></i>Practice<span class="n">9</span></button>
+            <button class="side-item" type="button"><i class="g"></i>Progress<span class="n">71</span></button>
+            <div class="side-lbl t-micro" style="padding-top:20px">Blocking</div>
+            <button class="side-item" type="button"><i class="g" style="border-color:var(--color-coral-red)"></i>System design</button>
+            <button class="side-item" type="button"><i class="g" style="border-color:var(--color-coral-red)"></i>Docker &amp; CI/CD</button>
+          </aside>
+          <div class="app-main">
+            <div class="app-hd">
+              <span class="t-caption paper">12 tracks measured &middot; <span class="fog">5 gaps open</span></span>
+              <span class="mono ash">readiness 71 / 100</span>
+            </div>
+            <div class="gauges" id="gauges"></div>
+            <div class="legend">
+              <span class="lg"><i class="solid"></i>Proven now</span>
+              <span class="lg"><i class="hatch"></i>Gap to close</span>
+              <span class="lg"><i class="mark"></i>What the role asks for</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LOGO STRIP ===================== -->
+  <section class="container strip">
+    <p class="t-caption ash">Used by placement cells and student chapters at</p>
+    <div class="strip-row">
+      <span>VIT Vellore</span><span>NIT Trichy</span><span>BITS Pilani</span>
+      <span>IIIT Hyderabad</span><span>Manipal</span><span>PES University</span>
+    </div>
+  </section>
+
+  <!-- ===================== INTAKE ===================== -->
+  <section class="container stack-md" id="intake">
+    <div class="sec-head">
+      <span class="t-micro">Resume intake</span>
+      <h2 class="t-section">It starts with the resume you already send.</h2>
+      <p class="t-body">Not a questionnaire. SkillForge parses the PDF, separates claims from evidence, reads
+        your coursework for corroboration, and flags the lines that quietly cost you callbacks.</p>
+    </div>
+
+    <div class="frame">
+      <div class="app-bar">
+        <div class="crumb"><span class="dim">Intake</span><span class="sep">/</span><span>Aarav_Menon_Resume_v4.pdf</span></div>
+        <div class="bar-tools">
+          <span class="badge ok"><i class="d"></i>Parsed in 2.4s</span>
+          <span class="tool">Re-upload</span>
+        </div>
+      </div>
+      <div class="intake">
+        <div class="stack-sm">
+          <div class="subcard">
+            <div class="file-row">
+              <div class="file-ico">PDF</div>
+              <div>
+                <div class="t-caption" style="color:var(--color-mist)">Aarav_Menon_Resume_v4.pdf</div>
+                <div class="mono ash" style="margin-top:2px">2 pages &middot; 184 KB &middot; 13 Aug, 09:12</div>
+              </div>
+            </div>
+            <ul class="plog">
+              <li style="--i:0"><span class="ck">✓</span>Sections identified<span class="v">6</span></li>
+              <li style="--i:1"><span class="ck">✓</span>Skills extracted<span class="v">23</span></li>
+              <li style="--i:2"><span class="ck">✓</span>Projects linked to GitHub<span class="v">3 / 4</span></li>
+              <li style="--i:3"><span class="ck">✓</span>Claims lacking evidence<span class="v">2</span></li>
+            </ul>
+          </div>
+
+          <div class="subcard">
+            <span class="t-micro">Skills found</span>
+            <div class="chips" id="chips"></div>
+          </div>
+
+          <div class="subcard">
+            <span class="t-micro">Target role</span>
+            <div class="roles">
+              <button class="role" type="button" aria-pressed="true">Backend engineer</button>
+              <button class="role" type="button" aria-pressed="false">Data engineer</button>
+              <button class="role" type="button" aria-pressed="false">ML engineer</button>
+              <button class="role" type="button" aria-pressed="false">Full stack</button>
+              <button class="role" type="button" aria-pressed="false">SDET</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack-sm">
+          <div class="subcard">
+            <span class="t-micro">Evidence on file</span>
+            <ul class="evidence">
+              <li><b>Campus Mess Portal</b> Django, Postgres <span class="m">400 users</span></li>
+              <li><b>Weather CLI</b> Python <span class="m">no tests</span></li>
+              <li><b>SIH 2025 finalist</b> backend lead <span class="m">team of 6</span></li>
+              <li><b>Zeta internship</b> internal tooling <span class="m">8 weeks</span></li>
+            </ul>
+          </div>
+
+          <div class="subcard">
+            <span class="t-micro">Coursework signal</span>
+            <ul class="evidence">
+              <li><b>DBMS</b> corroborates SQL <span class="m">A</span></li>
+              <li><b>Operating systems</b> thin on concurrency <span class="m">B</span></li>
+              <li><b>Computer networks</b> <span class="m">A</span></li>
+              <li><b>Distributed systems</b> not taken <span class="m">—</span></li>
+            </ul>
+          </div>
+
+          <div class="subcard">
+            <span class="t-micro">Flagged lines</span>
+            <div style="margin-top:var(--spacing-8)">
+              <div class="flagline">
+                <span class="loc">p.1 L7</span>
+                <p><b>"Improved performance significantly."</b> Recruiters read this as nothing. The mess portal
+                  query you rewrote went 2.1s to 240ms — say that instead.</p>
+              </div>
+              <div class="flagline">
+                <span class="loc">p.1 L14</span>
+                <p><b>"Familiar with Docker"</b> has no project behind it. Drop it, or finish the CI retrofit in
+                  week 6 and claim it properly.</p>
+              </div>
+              <div class="flagline">
+                <span class="loc">p.2 L3</span>
+                <p><b>Weather CLI</b> has no README and no tests. Two hours turns a filler line into a
+                  defensible one.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ROADMAP ===================== -->
+  <section class="container stack-md" id="roadmap">
+    <div class="split">
+      <div class="split-copy stack-md">
+        <div class="sec-head">
+          <span class="t-micro">Roadmap</span>
+          <h2 class="t-section">Fourteen weeks, planned backwards.</h2>
+          <p class="t-body">Three lanes run in parallel. Gap work feeds the build; the build becomes the thing
+            you talk about in the interview. Ordering is set by which gap blocks which project.</p>
+        </div>
+        <div class="notes">
+          <div class="note"><span class="k">W1</span><p><b>Docker comes first.</b> The shortener can't be load-tested without it.</p></div>
+          <div class="note"><span class="k">W5</span><p><b>System design runs long.</b> Six weeks of reading beats two weeks of cramming.</p></div>
+          <div class="note"><span class="k">W8</span><p><b>Mock #1 sits early.</b> A bad one still leaves six weeks to react.</p></div>
+          <div class="note"><span class="k">W12</span><p><b>Portfolio last.</b> Nothing to write up until the chat backend ships.</p></div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="app-bar">
+          <div class="crumb"><span class="dim">Roadmap</span><span class="sep">/</span><span>Week 3 of 14</span></div>
+          <div class="bar-tools">
+            <span class="tool">9 hrs / week</span>
+            <span class="badge ok"><i class="d"></i>On pace</span>
+          </div>
+        </div>
+        <div class="app-body solo">
+          <div class="app-main" style="padding:0">
+            <div class="rm-scroll">
+              <div class="rm">
+                <div class="rm-weeks">
+                  <span>Week</span>
+                  <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span>
+                  <span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span>
+                </div>
+
+                <div class="rm-lane">
+                  <div class="rm-lane-hd t-micro">Close gaps</div>
+                  <div class="rm-row"><span class="rm-lbl">Docker &amp; CI/CD</span><div class="rm-bars"><span class="bar-i close" style="grid-column:1/4;--i:0">Images → pipelines</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">SQL &amp; data modelling</span><div class="rm-bars"><span class="bar-i close" style="grid-column:2/6;--i:1">Indexes, joins, planner</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Concurrency in Go</span><div class="rm-bars"><span class="bar-i close" style="grid-column:4/8;--i:2">Goroutines → races</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">System design</span><div class="rm-bars"><span class="bar-i close" style="grid-column:5/12;--i:3">Estimation, caching, sharding</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Testing</span><div class="rm-bars"><span class="bar-i close" style="grid-column:8/11;--i:4">Unit → integration</span></div></div>
+                </div>
+
+                <div class="rm-lane">
+                  <div class="rm-lane-hd t-micro">Build proof</div>
+                  <div class="rm-row"><span class="rm-lbl">Rate-limited shortener</span><div class="rm-bars"><span class="bar-i build" style="grid-column:3/7;--i:5">Ship + load test</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">CI retrofit, mess portal</span><div class="rm-bars"><span class="bar-i build" style="grid-column:6/8;--i:6">Actions</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Chat backend</span><div class="rm-bars"><span class="bar-i build" style="grid-column:8/13;--i:7">Receipts, presence</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Portfolio pass</span><div class="rm-bars"><span class="bar-i build" style="grid-column:12/15;--i:8">READMEs, demos</span></div></div>
+                </div>
+
+                <div class="rm-lane">
+                  <div class="rm-lane-hd t-micro">Drill</div>
+                  <div class="rm-row"><span class="rm-lbl">Graphs &amp; DP sets</span><div class="rm-bars"><span class="bar-i drill" style="grid-column:1/15;--i:9">4 problems / week, spaced repeats</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Mock interviews</span><div class="rm-bars"><span class="bar-i mile" style="grid-column:8/9;--i:10">#1</span><span class="bar-i mile" style="grid-column:13/14;--i:11">#2</span></div></div>
+                  <div class="rm-row"><span class="rm-lbl">Company-specific prep</span><div class="rm-bars"><span class="bar-i drill" style="grid-column:11/15;--i:12">Razorpay, Postman, Zeta</span></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="legend" style="padding:var(--spacing-12) var(--spacing-16);margin:0">
+              <span class="lg"><i style="background:rgba(99,102,241,.4)"></i>Gap work</span>
+              <span class="lg"><i style="background:rgba(39,166,68,.4)"></i>Portfolio build</span>
+              <span class="lg"><i class="hatch" style="background:rgba(255,255,255,.06)"></i>Recurring drill</span>
+              <span class="lg"><i style="background:rgba(235,87,87,.45)"></i>Checkpoint</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PRACTICE ===================== -->
+  <section class="container stack-md" id="practice">
+    <div class="split rev">
+      <div class="frame">
+        <div class="app-bar">
+          <div class="crumb"><span class="dim">Practice</span><span class="sep">/</span><span>Queued for you</span></div>
+          <div class="bar-tools"><span class="tool">Re-ranks when the map changes</span></div>
+        </div>
+        <div class="prac">
+          <div>
+            <div class="app-hd"><span class="t-caption paper">Projects to build</span><span class="mono ash">4</span></div>
+            <div class="list">
+              <div class="item">
+                <div class="item-hd"><h4>Rate-limited link shortener</h4><span class="mono ash">W3–6</span></div>
+                <p>Redis token bucket in front of a Postgres key store, then break it deliberately with a load
+                  test and write up where it bent.</p>
+                <div class="item-ft">
+                  <span class="badge">Go</span><span class="badge">Redis</span><span class="badge">Docker</span>
+                  <span class="badge tag"><i class="d"></i>closes system design</span>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-hd"><h4>CI retrofit on the mess portal</h4><span class="mono ash">W6–7</span></div>
+                <p>Add Actions to a project you already shipped — tests, build, deploy on merge. The cheapest
+                  possible proof of the Docker claim.</p>
+                <div class="item-ft">
+                  <span class="badge">Actions</span><span class="badge">pytest</span>
+                  <span class="badge tag"><i class="d"></i>closes Docker</span>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-hd"><h4>Chat backend with receipts</h4><span class="mono ash">W8–12</span></div>
+                <p>WebSockets, presence, and delivery receipts that survive a reconnect. The one project here an
+                  interviewer will want to dig into.</p>
+                <div class="item-ft">
+                  <span class="badge">Go</span><span class="badge">WebSocket</span><span class="badge">Postgres</span>
+                  <span class="badge tag"><i class="d"></i>closes concurrency</span>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-hd"><h4>Slow-query teardown</h4><span class="mono ash">W4</span></div>
+                <p>Take the 2.1s mess portal query, read the plan, fix it, publish the before and after. One
+                  weekend, one strong resume line.</p>
+                <div class="item-ft">
+                  <span class="badge">Postgres</span><span class="badge">EXPLAIN</span>
+                  <span class="badge tag"><i class="d"></i>closes SQL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack-sm">
+            <div>
+              <div class="app-hd"><span class="t-caption paper">Interview drill</span><span class="mono ash">2025–26 rounds</span></div>
+              <div class="list">
+                <div class="item">
+                  <p style="margin:0;color:var(--color-mist)">Design a URL shortener serving 50k redirects a
+                    second. Where does the read path break first?</p>
+                  <div class="q-ask"><span class="badge err"><i class="d"></i>gap track</span><span class="src">System design &middot; Razorpay R2</span></div>
+                </div>
+                <div class="item">
+                  <p style="margin:0;color:var(--color-mist)">You have a 2 GB CSV and 512 MB of RAM. Write the
+                    group-by.</p>
+                  <div class="q-ask"><span class="badge"><i class="d"></i>covered</span><span class="src">Systems &middot; Zoho R1</span></div>
+                </div>
+                <div class="item">
+                  <p style="margin:0;color:var(--color-mist)">Explain how an index makes a range query fast —
+                    and when it makes writes slow.</p>
+                  <div class="q-ask"><span class="badge err"><i class="d"></i>gap track</span><span class="src">Databases &middot; Postman R2</span></div>
+                </div>
+                <div class="item">
+                  <p style="margin:0;color:var(--color-mist)">Two services write to the same row at the same
+                    time. Walk me through what you'd do.</p>
+                  <div class="q-ask"><span class="badge err"><i class="d"></i>gap track</span><span class="src">Concurrency &middot; Zeta R3</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="app-hd"><span class="t-caption paper">Certifications</span><span class="mono ash">1 worth it</span></div>
+              <div class="list">
+                <div class="item">
+                  <div class="item-hd"><h4>AWS Cloud Practitioner</h4><span class="badge lime"><i class="d"></i>Worth it</span></div>
+                  <p>Exam window 12–26 Oct &middot; ₹8,000</p>
+                </div>
+                <div class="item">
+                  <div class="item-hd"><h4>Docker Certified Associate</h4><span class="badge">Skip</span></div>
+                  <p>The CI retrofit proves this for free.</p>
+                </div>
+                <div class="item">
+                  <div class="item-hd"><h4>MongoDB Associate</h4><span class="badge">Skip</span></div>
+                  <p>Off your stack — Postgres is the strength to lean on.</p>
+                </div>
+                <div class="item">
+                  <div class="item-hd"><h4>Kubernetes CKAD</h4><span class="badge alt"><i class="d"></i>Later</span></div>
+                  <p>Revisit after the first backend role.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split-copy sec-head">
+        <span class="t-micro">Practice</span>
+        <h2 class="t-section">Every recommendation names the gap it closes.</h2>
+        <p class="t-body">Nothing is here because it's popular. Projects are chosen to produce evidence for the
+          tracks you're short on, questions come from rounds students actually sat, and three of the four
+          certifications tell you not to bother.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROGRESS ===================== -->
+  <section class="container stack-md" id="progress">
+    <div class="sec-head">
+      <span class="t-micro">Progress</span>
+      <h2 class="t-section">Readiness only moves when a gap closes.</h2>
+      <p class="t-body">It's the weighted distance between your gauges and the role's requirements — so logged
+        hours on their own don't move it. When a number stalls, the dashboard says which track stalled it.</p>
+    </div>
+
+    <div class="frame">
+      <div class="app-bar">
+        <div class="crumb"><span class="dim">Progress</span><span class="sep">/</span><span>Last 12 weeks</span></div>
+        <div class="bar-tools">
+          <span class="tool">126 days active</span>
+          <span class="badge ok"><i class="d"></i>On pace for week 14</span>
+        </div>
+      </div>
+
+      <div class="pg">
+        <div class="subcard score">
+          <span class="t-micro">Readiness</span>
+          <span class="big">71</span>
+          <span class="mono ash">/ 100 &middot; was 63 in June</span>
+          <p class="t-caption fog" style="margin:var(--spacing-8) 0 0">78 is the median offer threshold at your
+            target companies.</p>
+        </div>
+
+        <div class="subcard chartbox">
+          <div class="app-hd" style="padding:0 0 var(--spacing-12)">
+            <span class="t-caption paper">Readiness trend</span>
+            <span class="mono ash">target 78 by week 14</span>
+          </div>
+          <svg viewBox="-8 -10 546 140" role="img" aria-label="Readiness rose from 41 to 71 across twelve weeks, against a target of 78">
+            <defs>
+              <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#d0d6e0" stop-opacity=".18"/>
+                <stop offset="100%" stop-color="#d0d6e0" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="24" x2="520" y2="24" stroke="#383b3f" stroke-width="1" stroke-dasharray="2 5"/>
+            <text x="526" y="27" style="font-family:var(--font-berkeley-mono);font-size:11px;fill:#62666d">78</text>
+            <line x1="0" y1="120" x2="520" y2="120" stroke="#23252a" stroke-width="1"/>
+            <path d="M0,104 L47.3,96 L94.5,98.7 L141.8,85.3 L189.1,74.7 L236.4,77.3 L283.6,64 L330.9,56 L378.2,58.7 L425.5,45.3 L472.7,37.3 L520,24 L520,120 L0,120 Z" fill="url(#fill)"/>
+            <path d="M0,104 L47.3,96 L94.5,98.7 L141.8,85.3 L189.1,74.7 L236.4,77.3 L283.6,64 L330.9,56 L378.2,58.7 L425.5,45.3 L472.7,37.3 L520,24" fill="none" stroke="#d0d6e0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="520" cy="24" r="3.5" fill="#ffffff"/>
+          </svg>
+          <div class="xr">
+            <span class="mono ash">22 May</span><span class="mono ash">19 Jun</span>
+            <span class="mono ash">17 Jul</span><span class="mono ash">13 Aug</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pg2">
+        <div class="subcard">
+          <div class="app-hd" style="padding:0 0 var(--spacing-8)">
+            <span class="t-caption paper">Gap closure since June</span><span class="mono ash">4 tracks</span>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div class="item-hd"><h4>SQL &amp; data modelling</h4><span class="mono ash">5.0 → 6.4 of 7</span></div>
+              <span class="mini"><i style="width:64%"></i><u style="left:70%"></u></span>
+            </div>
+            <div class="item">
+              <div class="item-hd"><h4>Docker &amp; CI/CD</h4><span class="mono ash">3.0 → 4.8 of 6</span></div>
+              <span class="mini"><i style="width:48%"></i><u style="left:60%"></u></span>
+            </div>
+            <div class="item">
+              <div class="item-hd"><h4>System design</h4><span class="mono ash">2.0 → 3.4 of 6</span></div>
+              <span class="mini"><i style="width:34%"></i><u style="left:60%"></u></span>
+            </div>
+            <div class="item">
+              <div class="item-hd"><h4>Testing</h4><span class="mono ash">2.0 → 2.0 of 5</span></div>
+              <span class="mini"><i style="width:20%"></i><u style="left:50%"></u></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <div class="app-hd" style="padding:0 0 var(--spacing-8)">
+            <span class="t-caption paper">What moved the needle</span>
+          </div>
+          <div>
+            <div class="mv"><span class="delta">+4.1</span>
+              <p><b>Shipped the shortener's load test.</b> Real numbers on a real service — the largest single
+                jump in system design so far.</p></div>
+            <div class="mv"><span class="delta">+2.6</span>
+              <p><b>Postgres index lab, part 1.</b> Moved SQL past the role's bar for the first time.</p></div>
+            <div class="mv"><span class="delta">+1.3</span>
+              <p><b>18 graph problems in July.</b> Steady, but flattening — those hours are worth more in the
+                testing track now.</p></div>
+            <div class="mv"><span class="delta flat">0.0</span>
+              <p><b>Testing hasn't moved since June.</b> The only track with no scheduled work before week 8.
+                Pull it forward or accept the risk.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 var(--spacing-16) var(--spacing-16)">
+        <div class="subcard">
+          <div class="app-hd" style="padding:0">
+            <span class="t-caption paper">Study log</span>
+            <span class="mono ash">126 days active &middot; longest run 31</span>
+          </div>
+          <div class="streak" id="streak"></div>
+          <div class="legend" style="padding:var(--spacing-12) 0 0">
+            <span class="lg">26 weeks &middot; one square per day</span>
+            <span class="lg" style="gap:3px">
+              <i style="width:8px;background:rgba(255,255,255,.035)"></i>
+              <i style="width:8px;background:rgba(208,214,224,.18)"></i>
+              <i style="width:8px;background:rgba(208,214,224,.38)"></i>
+              <i style="width:8px;background:rgba(208,214,224,.62)"></i>
+              <i style="width:8px;background:var(--color-mist)"></i>
+              <span style="margin-left:4px">up to 4 hrs</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA ===================== -->
+  <section class="container" id="cta">
+    <div class="cta">
+      <h2 class="t-section" style="max-width:16ch">Find out where you actually stand.</h2>
+      <p class="t-body-lg" style="max-width:52ch;color:var(--color-fog)">Upload a resume, pick a role, and get
+        the full report in under three seconds.</p>
+      <a class="btn-pill" href="#top" style="padding:10px 20px;font-size:14px">Upload your resume</a>
+      <p class="t-caption ash">Free for students. No card, no placement-cell licence required.</p>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="container foot">
+    <div class="foot-in">
+      <div class="foot-col">
+        <span class="logo" style="font-size:14px">SkillForge</span>
+        <span class="t-caption ash">Skill gap analysis for campus placements</span>
+      </div>
+      <div class="foot-col">
+        <span class="t-micro">Product</span>
+        <a href="#skillmap">Skill map</a><a href="#intake">Resume intake</a><a href="#roadmap">Roadmap</a>
+      </div>
+      <div class="foot-col">
+        <span class="t-micro">Prepare</span>
+        <a href="#practice">Projects</a><a href="#practice">Interview drill</a><a href="#progress">Progress</a>
+      </div>
+      <div class="foot-col">
+        <span class="t-micro">Colleges</span>
+        <a href="#cta">Placement cell</a><a href="#cta">Cohort analytics</a><a href="#cta">Contact</a>
+      </div>
+      <div class="foot-col">
+        <span class="t-micro">Report</span>
+        <span class="mono ash">Generated 13 Aug 2026</span>
+        <span class="mono ash">Benchmarks refreshed weekly</span>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function(){
+  /* ---- extracted skill chips ---- */
+  var skills=[['Python',0],['Django',0],['PostgreSQL',0],['REST APIs',0],['Git',0],['Linux',0],
+    ['SQL',0],['React',0],['Pandas',0],['Flask',0],['JavaScript',0],
+    ['Redis',1],['Nginx',1],['Celery',1],['pytest',1]];
+  var chips=document.getElementById('chips');
+  skills.forEach(function(s,i){
+    var el=document.createElement('span');
+    el.className='chip'+(s[1]?' new':'');
+    el.textContent=s[0];
+    el.style.animationDelay=(0.25+i*0.035)+'s';
+    chips.appendChild(el);
+  });
+
+  /* ---- gap gauges ---- */
+  var tracks=[
+    ['System design',        2.0,6.0,'Thin on estimation, caching, sharding','7 wks'],
+    ['Docker & CI/CD',       3.0,6.0,'Claimed on the resume, no project behind it','3 wks'],
+    ['Testing',              2.0,5.0,'No test file in any repository','3 wks'],
+    ['Concurrency (Go)',     4.0,7.0,'Coursework only, no applied work','4 wks'],
+    ['DSA — graphs & DP',    6.0,8.0,'Solid on trees, slow on shortest paths','6 wks'],
+    ['SQL & data modelling', 6.4,7.0,'Index lab part 2 finishes this','1 wk'],
+    ['REST & API design',    7.0,7.0,'Met the bar with the mess portal',''],
+    ['Linux & shell',        6.0,5.0,'Above the bar','']
+  ];
+  var host=document.getElementById('gauges');
+  tracks.forEach(function(t,i){
+    var name=t[0],have=t[1],need=t[2],note=t[3],wks=t[4];
+    var open=have<need;
+    var d=document.createElement('div');
+    d.className='gauge';
+    d.style.setProperty('--i',i);
+    d.innerHTML=
+      '<div class="g-hd"><span class="g-name">'+name+'</span>'+
+      '<span class="g-val">you <b>'+have.toFixed(1)+'</b> &middot; role <i>'+need.toFixed(1)+'</i></span></div>'+
+      '<div class="track">'+
+        '<span class="have" style="width:'+(have*10)+'%"></span>'+
+        (open?'<span class="gap" style="left:'+(have*10)+'%;width:'+((need-have)*10)+'%"></span>':'')+
+        '<span class="notch" style="left:calc('+(need*10)+'% - 0.5px)"></span>'+
+      '</div>'+
+      '<div class="g-ft"><span>'+note+'</span><span class="wks">'+(open?wks+' to close':'no gap')+'</span></div>';
+    host.appendChild(d);
+  });
+
+  /* ---- role chips ---- */
+  document.querySelectorAll('.role').forEach(function(c){
+    c.addEventListener('click',function(){
+      document.querySelectorAll('.role').forEach(function(o){o.setAttribute('aria-pressed','false');});
+      c.setAttribute('aria-pressed','true');
+    });
+  });
+
+  /* ---- sidebar ---- */
+  document.querySelectorAll('.app-side .side-item').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.app-side .side-item').forEach(function(o){o.removeAttribute('aria-current');});
+      b.setAttribute('aria-current','true');
+    });
+  });
+
+  /* ---- study log (deterministic) ---- */
+  var streak=document.getElementById('streak');
+  for(var day=0;day<7;day++){
+    for(var w=0;w<26;w++){
+      var i=w*7+day;
+      var h=(i*7919+w*131+day*37)%100;
+      var lvl=0;
+      if(day===0&&h<70) lvl=0;
+      else if(h>88) lvl=4;
+      else if(h>66) lvl=3;
+      else if(h>38) lvl=2;
+      else if(h>14) lvl=1;
+      if(w>22&&h>30) lvl=Math.min(4,lvl+1);
+      var c=document.createElement('i');
+      c.setAttribute('data-l',lvl);
+      streak.appendChild(c);
+    }
+  }
+})();
+</script>

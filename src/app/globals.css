@@ -1,0 +1,253 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. The Linear palette as first-class Tailwind utilities
+      → bg-void, text-mist, border-graphite, text-acid-lime, …
+
+   Deliberately NOT defined here:
+   · --spacing-*  Tailwind v4 generates the whole scale from one --spacing
+                  multiplier (0.25rem = 4px). Linear's base unit is already 4px,
+                  so gap-2=8, p-6=24, gap-24=96 come free. Defining --spacing-4
+                  would redefine p-4 from 16px to 4px and wreck every shadcn
+                  component's internal padding.
+   · --radius-*   shadcn owns these; see block 3.
+   · --shadow-sm / --shadow-md
+                  Tailwind defaults used throughout the shadcn components.
+                  Our custom elevations use distinct names below.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  --color-void: #08090a;
+  --color-carbon: #0f1011;
+  --color-obsidian: #161718;
+  --color-graphite: #23252a;
+  --color-smoke: #383b3f;
+  --color-ash: #62666d;
+  --color-fog: #8a8f98;
+  --color-mist: #d0d6e0;
+  --color-bone: #e5e5e6;
+  --color-paper: #ffffff;
+  --color-acid-lime: #e4f222;
+  --color-pulse-green: #27a644;
+  --color-coral-red: #eb5757;
+  --color-signal-teal: #02b8cc;
+  --color-iris-violet: #6366f1;
+  --color-lavender: #8b5cf6;
+
+  /* Type scale — custom names, no collision with Tailwind's text-sm/base/lg */
+  --text-caption: 13px;
+  --text-caption--line-height: 1.2;
+  --text-body-sm: 15px;
+  --text-body-sm--line-height: 1.6;
+  --text-body-sm--letter-spacing: -0.011em;
+  --text-body-lg: 20px;
+  --text-body-lg--line-height: 1.33;
+  --text-body-lg--letter-spacing: -0.012em;
+  --text-subheading: 24px;
+  --text-subheading--line-height: 1.33;
+  --text-subheading--letter-spacing: -0.012em;
+  --text-heading-sm: 32px;
+  --text-heading-sm--line-height: 1.13;
+  --text-heading-sm--letter-spacing: -0.022em;
+  --text-heading: 48px;
+  --text-heading--line-height: 1;
+  --text-heading--letter-spacing: -0.022em;
+  --text-heading-lg: 64px;
+  --text-heading-lg--line-height: 1;
+  --text-heading-lg--letter-spacing: -0.022em;
+  --text-display: 72px;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.022em;
+
+  /* Elevation is borders and inset shadows, never ambient drop shadows */
+  --shadow-subtle: inset 0 0 0 1px #23252a;
+  --shadow-card: rgba(8, 9, 10, 0.6) 0 4px 32px 0;
+  --shadow-lime: rgba(0, 0, 0, 0.01) 0 5px 2px, rgba(0, 0, 0, 0.04) 0 3px 2px,
+    rgba(0, 0, 0, 0.07) 0 1px 1px, rgba(0, 0, 0, 0.08) 0 0 1px;
+
+  /* The gap-gauge hatch and the roadmap tick grid, reused in several places */
+  --hatch: repeating-linear-gradient(
+    135deg,
+    transparent 0 3px,
+    rgba(255, 255, 255, 0.16) 3px 4px
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. shadcn's semantic contract, mapped onto the Linear palette.
+
+   Dark-only by design: the same values in :root and .dark, `class="dark"` on
+   <html>, and color-scheme: dark. shadcn components that branch on `dark:`
+   then behave identically whether or not the class is present.
+
+   --foreground is MIST (#d0d6e0), not white. shadcn puts text-foreground on
+   nearly everything; white makes the whole UI read as high-contrast and stops
+   looking like Linear. Headings opt into paper explicitly (block 4).
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root,
+.dark {
+  --background: #08090a;
+  --foreground: #d0d6e0;
+  --card: #0f1011;
+  --card-foreground: #d0d6e0;
+  --popover: #161718;
+  --popover-foreground: #d0d6e0;
+
+  /* The one chromatic action in the system */
+  --primary: #e4f222;
+  --primary-foreground: #08090a;
+
+  --secondary: rgba(255, 255, 255, 0.05);
+  --secondary-foreground: #d0d6e0;
+  --muted: rgba(255, 255, 255, 0.03);
+  --muted-foreground: #8a8f98;
+  --accent: rgba(255, 255, 255, 0.05);
+  --accent-foreground: #ffffff;
+  --destructive: #eb5757;
+  --destructive-foreground: #08090a;
+
+  --border: #23252a;
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #d0d6e0;
+
+  --chart-1: #6366f1;
+  --chart-2: #27a644;
+  --chart-3: #8b5cf6;
+  --chart-4: #eb5757;
+  --chart-5: #02b8cc;
+
+  --sidebar: #0f1011;
+  --sidebar-foreground: #8a8f98;
+  --sidebar-primary: #e4f222;
+  --sidebar-primary-foreground: #08090a;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #23252a;
+  --sidebar-ring: #d0d6e0;
+
+  --radius: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. shadcn's inline bridge.
+
+   NOTE: shadcn v4 derives radii MULTIPLICATIVELY (--radius-sm = radius * 0.6,
+   md * 0.8, xl * 1.4). No single --radius value lands Linear's 4 / 6 / 12,
+   so the four sizes are pinned literally instead. The radius vocabulary is
+   exactly: badges 4, buttons+inputs 6, cards 12, pills 9999.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-4xl: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. Base layer
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* These alternates are the typographic identity — see docs/DESIGN.md */
+    font-feature-settings: "cv01" on, "ss03" on, "zero" on;
+  }
+
+  /* Weight caps at 590. 700+ is out of the system entirely. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-paper);
+    font-weight: 510;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-acid-lime);
+    color: var(--color-void);
+  }
+}
+
+@layer utilities {
+  /* Uppercase micro-label used for eyebrows and section markers */
+  .t-micro {
+    font-size: 10px;
+    line-height: 1.5;
+    font-weight: 510;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ash);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hatch {
+    background-image: var(--hatch);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
