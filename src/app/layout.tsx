@@ -28,7 +28,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SkillForge",
   description:
-    "Reads your resume, measures every skill against the role you're chasing, and returns the shortest honest path to ready.",
+    "SkillForge reads your resume, measures every skill against the role you're chasing, and returns the shortest honest path to ready.",
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

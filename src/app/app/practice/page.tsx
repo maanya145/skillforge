@@ -61,11 +61,10 @@ export default async function PracticePage() {
   return (
     <div className="flex flex-col gap-6">
       <SectionHead eyebrow="Step 04" title="Practice">
-        Every recommendation names the gap it closes and what it&rsquo;s worth.
-        Nothing is here because it&rsquo;s popular — the scores are weighted gap
-        points, and most of the certification list says don&rsquo;t bother. The
-        questions are archetypes drawn from publicly shared interview
-        experiences, not transcripts.
+        Every recommendation names the gap it closes and what it&rsquo;s
+        worth. Nothing is here because it&rsquo;s popular — the scores are
+        weighted gap points. The questions are archetypes drawn from publicly
+        shared interview experiences, not transcripts.
       </SectionHead>
 
       <WorkspaceFrame

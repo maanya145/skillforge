@@ -56,7 +56,7 @@ const SCREENS: [string, string, string, React.ReactNode][] = [
   ["/app/map", "Skill map", "Gauges, gaps and the role comparison", <Gauge key="m" className="size-4" />],
   ["/app/roadmap", "Roadmap", "The 14-week plan, three lanes", <CalendarRange key="r" className="size-4" />],
   ["/app/practice", "Practice", "Ranked projects, certs and questions", <Dumbbell key="p" className="size-4" />],
-  ["/app/progress", "Progress", "Readiness trend and study log", <TrendingUp key="g" className="size-4" />],
+  ["/app/progress", "Progress", "Readiness trend and what moved it", <TrendingUp key="g" className="size-4" />],
   ["/app/chat", "Mentor", "Chat grounded in your numbers", <MessageCircle key="c" className="size-4" />],
   ["/app/feed", "Feed", "Engineering news ranked against your open gaps", <Newspaper key="n" className="size-4" />],
   ["/app/certifications", "Certifications", "Weigh certifications against your budget", <BadgeCheck key="v" className="size-4" />],

@@ -93,16 +93,6 @@ export function ReadinessSparkline({
   )
 }
 
-// ─── Study heatmap ───────────────────────────────────────────────────────────
-
-const HEAT = [
-  "bg-white/[0.035]",
-  "bg-mist/20",
-  "bg-mist/40",
-  "bg-mist/60",
-  "bg-mist",
-]
-
 /** The `.mini` bar: solid progress, a notch at the requirement. */
 export function MiniGapBar({
   proven,

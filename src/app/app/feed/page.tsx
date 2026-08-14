@@ -53,7 +53,7 @@ export default async function FeedPage() {
           </EmptyState>
         ) : (
           <>
-            <AppHeading aside={`${items.length} stories · refreshed hourly`}>
+            <AppHeading aside={`${items.length} stories · refreshed every 15 minutes`}>
               Ranked against your open gaps
             </AppHeading>
 
