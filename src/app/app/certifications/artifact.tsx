@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useSyncExternalStore } from "react"
-import { ChevronRight } from "lucide-react"
+import { CheckSquare, ChevronRight, Square } from "lucide-react"
 
 import { rankCerts, type CatalogCert } from "@/lib/ranking/rank"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -138,17 +138,36 @@ export function Certifications({
           />
         </label>
 
-        <label className="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            checked={countProjects}
-            onChange={(e) => setCountProjects(e.target.checked)}
-            className="size-3.5 accent-paper"
-          />
-          <span className="text-xs text-fog">
+        {/* A native checkbox renders as the OS control, which is the one thing
+            on this screen that cannot be brought onto the design system. An
+            icon toggle carries the same state and stays in the palette. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={countProjects}
+          onClick={() => setCountProjects((v) => !v)}
+          className="group flex items-center gap-2 text-left"
+        >
+          {countProjects ? (
+            <CheckSquare
+              className="size-3.5 shrink-0 text-paper"
+              aria-hidden
+            />
+          ) : (
+            <Square
+              className="size-3.5 shrink-0 text-ash transition-colors group-hover:text-fog"
+              aria-hidden
+            />
+          )}
+          <span
+            className={cn(
+              "text-xs transition-colors",
+              countProjects ? "text-fog" : "text-ash group-hover:text-fog"
+            )}
+          >
             Count the projects on my roadmap as already proving their tracks
           </span>
-        </label>
+        </button>
       </div>
 
       {/* ── Verdicts ─────────────────────────────────────────────────────── */}

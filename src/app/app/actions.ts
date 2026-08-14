@@ -248,62 +248,6 @@ export async function toggleRoadmapItem(
   }
 }
 
-/** Study-log bucket boundaries, in minutes → heatmap levels 1–4. */
-const BUCKETS: [number, number][] = [
-  [180, 4],
-  [120, 3],
-  [60, 2],
-  [1, 1],
-]
-
-export async function logStudySession(
-  formData: FormData
-): Promise<ActionSummary> {
-  const student = await ensureStudent()
-  const minutes = Math.max(
-    0,
-    Math.min(600, Number(formData.get("minutes")) || 0)
-  )
-  if (minutes === 0) return { ok: false, message: "Pick a duration first." }
-
-  const day = new Date().toISOString().slice(0, 10)
-  const [existing] = await db
-    .select()
-    .from(schema.studyLog)
-    .where(
-      and(
-        eq(schema.studyLog.studentId, student.id),
-        eq(schema.studyLog.day, day)
-      )
-    )
-
-  const total = (existing?.minutes ?? 0) + minutes
-  const level = BUCKETS.find(([min]) => total >= min)?.[1] ?? 0
-
-  await db
-    .insert(schema.studyLog)
-    .values({ studentId: student.id, day, minutes: total, level })
-    .onConflictDoUpdate({
-      target: [schema.studyLog.studentId, schema.studyLog.day],
-      set: { minutes: total, level },
-    })
-
-  await db.insert(schema.progressEvents).values({
-    studentId: student.id,
-    type: "study_session",
-    minutes,
-    levelDelta: 0,
-    headline: `Logged ${minutes} minutes of study.`,
-    body: "Hours build the habit trail; only closed gaps move readiness.",
-  })
-
-  revalidatePath("/app/progress")
-  return {
-    ok: true,
-    message: `Logged ${minutes} minutes — ${total} today. Only closed gaps move readiness.`,
-  }
-}
-
 /**
  * The flagship: re-target the analysis at a different role. Zero model calls —
  * the cached evidence signals are re-scored against the new role's benchmark,

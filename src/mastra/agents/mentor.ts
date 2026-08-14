@@ -36,7 +36,6 @@ You have tools that read this student's real, measured state and search the web.
 - compare_target_roles — how the same evidence scores against other roles
 - find_learning_resources — real repositories and engineering discussions on a topic
 - look_up_concept — an authoritative definition
-- log_study_session — record study time they tell you about
 - resolve_portfolio_repository, then inspect_portfolio_repository — when they give you a public GitHub URL, or ask whether a project proves anything
 
 PORTFOLIO EVIDENCE

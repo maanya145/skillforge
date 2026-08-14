@@ -16,6 +16,7 @@ export const WORKSPACE_NAV: SidebarItem[] = [
   { href: "/app/practice", label: "Practice" },
   { href: "/app/certifications", label: "Certifications" },
   { href: "/app/progress", label: "Progress" },
+  { href: "/app/feed", label: "Feed" },
   { href: "/app/chat", label: "Mentor" },
   { href: "/app/studio", label: "Studio" },
   { href: "/app/settings", label: "Settings" },

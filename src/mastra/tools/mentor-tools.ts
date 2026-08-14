@@ -416,49 +416,6 @@ export function createMentorTools(studentId: string) {
     },
   })
 
-  const logStudy = createTool({
-    id: "log_study_session",
-    description:
-      "Record study time the student reports in conversation. Builds their activity trail. Does NOT move readiness — only completing a roadmap item does that, and only they can do that from the Roadmap screen.",
-    inputSchema: z.object({
-      minutes: z.number().int().min(5).max(600),
-      topic: z.string().max(60).optional(),
-    }),
-    outputSchema: z.object({ logged: z.number(), totalToday: z.number() }),
-    execute: async ({ minutes, topic }) => {
-      const day = new Date().toISOString().slice(0, 10)
-      const [existing] = await db
-        .select()
-        .from(schema.studyLog)
-        .where(
-          and(
-            eq(schema.studyLog.studentId, studentId),
-            eq(schema.studyLog.day, day)
-          )
-        )
-      const total = (existing?.minutes ?? 0) + minutes
-      const level =
-        total >= 180 ? 4 : total >= 120 ? 3 : total >= 60 ? 2 : total > 0 ? 1 : 0
-
-      await db
-        .insert(schema.studyLog)
-        .values({ studentId, day, minutes: total, level })
-        .onConflictDoUpdate({
-          target: [schema.studyLog.studentId, schema.studyLog.day],
-          set: { minutes: total, level },
-        })
-      await db.insert(schema.progressEvents).values({
-        studentId,
-        type: "study_session",
-        minutes,
-        levelDelta: 0,
-        headline: `Logged ${minutes} minutes${topic ? ` on ${topic}` : ""}.`,
-        body: "Recorded from a mentor conversation.",
-      })
-      return { logged: minutes, totalToday: total }
-    },
-  })
-
   // Keys, not ids, are what Mastra reports as the tool name in stream chunks —
   // so they must match TOOL_LABELS exactly or the UI shows raw identifiers.
   return {
@@ -470,6 +427,5 @@ export function createMentorTools(studentId: string) {
     find_learning_resources: findResources,
     look_up_concept: defineConcept,
     preview_link: preview,
-    log_study_session: logStudy,
   }
 }

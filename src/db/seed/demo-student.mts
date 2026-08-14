@@ -101,9 +101,6 @@ if (reset) {
     .delete(schema.readinessSnapshots)
     .where(eq(schema.readinessSnapshots.studentId, student.id))
   await db
-    .delete(schema.studyLog)
-    .where(eq(schema.studyLog.studentId, student.id))
-  await db
     .delete(schema.roadmaps)
     .where(eq(schema.roadmaps.studentId, student.id))
   console.log("reset    previous demo data cleared")
@@ -425,53 +422,8 @@ for (const row of snapshotRows) {
     })
 }
 
-// ── Study log: 26 weeks, deterministic pattern, denser recently ──────────────
-const logRows: (typeof schema.studyLog.$inferInsert)[] = []
-for (let d = 181; d >= 0; d--) {
-  const date = new Date(today)
-  date.setDate(today.getDate() - d)
-  const h = (d * 7919 + 131) % 100
-  let level = 0
-  if (h > 86) level = 4
-  else if (h > 64) level = 3
-  else if (h > 38) level = 2
-  else if (h > 16) level = 1
-  if (date.getDay() === 0 && h < 70) level = 0 // Sundays mostly off
-  if (d < 28 && h > 30) level = Math.min(4, level + 1) // recent push
-  if (level > 0) {
-    logRows.push({
-      studentId: student.id,
-      day: date.toISOString().slice(0, 10),
-      minutes: level * 45,
-      level,
-    })
-  }
-}
-for (const row of logRows) {
-  await db
-    .insert(schema.studyLog)
-    .values(row)
-    .onConflictDoUpdate({
-      target: [schema.studyLog.studentId, schema.studyLog.day],
-      set: { minutes: row.minutes, level: row.level },
-    })
-}
-
-// ── Movers ───────────────────────────────────────────────────────────────────
-const eventAt = (daysAgo: number) => {
-  const d = new Date(today)
-  d.setDate(today.getDate() - daysAgo)
-  return d
-}
-await db.insert(schema.progressEvents).values([
-  { studentId: student.id, occurredAt: eventAt(9), type: "project_shipped", trackId: "sql-modelling", levelDelta: 2.6, headline: "Rewrote the mess portal's menu query.", body: "2.1s to 240ms, measured — moved SQL past the bar for the first time." },
-  { studentId: student.id, occurredAt: eventAt(23), type: "item_completed", trackId: "api-design", levelDelta: 1.8, headline: "Shipped auth on the mess portal.", body: "Sessions and roles in production for 400 users." },
-  { studentId: student.id, occurredAt: eventAt(41), type: "question_attempted", trackId: "dsa", levelDelta: 1.1, headline: "18 graph problems in a month.", body: "Steady, but the returns are flattening — hours are worth more in testing now." },
-  { studentId: student.id, occurredAt: eventAt(3), type: "study_session", trackId: "testing", minutes: 90, levelDelta: 0, headline: "Testing hasn't moved since June.", body: "The only track with no scheduled work before week 8. Pull it forward or accept the risk." },
-])
-
 console.log(
   `demo     ${student.fullName} (${clerkId})\n` +
     `         readiness ${readiness} · ${gauges.filter((g) => g.status === "open").length} open gaps · ` +
-    `${schedule.items.length} roadmap items · ${snapshotRows.length} snapshots · ${logRows.length} study days`
+    `${schedule.items.length} roadmap items · ${snapshotRows.length} snapshots`
 )

@@ -12,10 +12,8 @@ import { WorkspaceFrame, EmptyState } from "@/components/shell/workspace"
 import { AppHeading, SubCard } from "@/components/shell/frame"
 import {
   ReadinessSparkline,
-  StudyHeatmap,
   MiniGapBar,
 } from "@/components/viz/charts"
-import { StudyForm } from "./study-form"
 
 /**
  * The dashed line on the trend chart.
@@ -51,7 +49,7 @@ export default async function ProgressPage() {
     )
   }
 
-  const { snapshots, log, events } = await getProgress(student.id, map.roleId)
+  const { snapshots, events } = await getProgress(student.id, map.roleId)
   const spark = snapshots.map((s) => s.readiness)
   const labels =
     snapshots.length > 1
@@ -69,7 +67,6 @@ export default async function ProgressPage() {
       : undefined
 
   const closing = map.gauges.filter((g) => g.status === "open").slice(0, 4)
-  const activeDays = log.filter((d) => d.level > 0).length
 
   return (
     <Shell
@@ -137,8 +134,8 @@ export default async function ProgressPage() {
           <AppHeading className="px-0">What moved the needle</AppHeading>
           {events.length === 0 ? (
             <p className="text-xs text-ash">
-              Nothing yet. Readiness only moves when a gap closes — mark roadmap
-              items done, or log study sessions to build the habit trail.
+              Nothing yet. Readiness only moves when a gap closes — mark a
+              roadmap item done and it will show up here.
             </p>
           ) : (
             <div className="flex flex-col">
@@ -169,18 +166,6 @@ export default async function ProgressPage() {
         </SubCard>
       </div>
 
-      <SubCard>
-        <AppHeading
-          className="px-0"
-          aside={`${activeDays} active days in 26 weeks`}
-        >
-          Study log
-        </AppHeading>
-        <StudyHeatmap
-          days={log.map((d) => ({ day: d.day, level: d.level }))}
-        />
-        <StudyForm />
-      </SubCard>
     </Shell>
   )
 }
@@ -196,8 +181,8 @@ function Shell({
     <div className="flex flex-col gap-6">
       <SectionHead eyebrow="Step 05" title="Progress">
         Readiness is the weighted distance between your skills and the
-        role&rsquo;s requirements. It only moves when a gap closes — hours
-        logged on their own don&rsquo;t count, and that&rsquo;s the point.
+        role&rsquo;s requirements. It only moves when a gap closes — time spent
+        on its own doesn&rsquo;t count, and that&rsquo;s the point.
       </SectionHead>
 
       <WorkspaceFrame

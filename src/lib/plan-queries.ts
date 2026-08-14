@@ -138,7 +138,7 @@ export async function getIntakeDetail(runId: string) {
 
 /** Snapshots, study log and movers for the progress screen. */
 export async function getProgress(studentId: string, roleId: string) {
-  const [snapshots, log, events] = await Promise.all([
+  const [snapshots, events] = await Promise.all([
     db
       .select()
       .from(schema.readinessSnapshots)
@@ -151,16 +151,11 @@ export async function getProgress(studentId: string, roleId: string) {
       .orderBy(asc(schema.readinessSnapshots.capturedOn)),
     db
       .select()
-      .from(schema.studyLog)
-      .where(eq(schema.studyLog.studentId, studentId))
-      .orderBy(asc(schema.studyLog.day)),
-    db
-      .select()
       .from(schema.progressEvents)
       .where(eq(schema.progressEvents.studentId, studentId))
       .orderBy(desc(schema.progressEvents.occurredAt))
       .limit(8),
   ])
 
-  return { snapshots, log, events }
+  return { snapshots, events }
 }

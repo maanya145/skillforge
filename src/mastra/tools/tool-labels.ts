@@ -14,7 +14,6 @@ export const TOOL_LABELS: Record<string, string> = {
   find_learning_resources: "Searched the web",
   look_up_concept: "Looked up a definition",
   preview_link: "Read the page preview",
-  log_study_session: "Logged your study time",
   resolve_portfolio_repository: "Checked the repository link",
   inspect_portfolio_repository: "Inspected your repository",
 }

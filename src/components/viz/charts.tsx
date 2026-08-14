@@ -103,55 +103,6 @@ const HEAT = [
   "bg-mist",
 ]
 
-/**
- * 26 weeks × 7 days, column-major like every contribution graph. `days` is
- * chronological; levels are 0–4 buckets computed at write time.
- */
-export function StudyHeatmap({
-  days,
-  className,
-}: {
-  days: { day: string; level: number }[]
-  className?: string
-}) {
-  const byDay = new Map(days.map((d) => [d.day, d.level]))
-  const today = new Date()
-  const cells: { key: string; level: number }[][] = []
-
-  // Build 26 columns of 7 rows, ending today.
-  for (let w = 25; w >= 0; w--) {
-    const col: { key: string; level: number }[] = []
-    for (let d = 6; d >= 0; d--) {
-      const date = new Date(today)
-      date.setDate(today.getDate() - (w * 7 + d))
-      const key = date.toISOString().slice(0, 10)
-      col.push({ key, level: byDay.get(key) ?? 0 })
-    }
-    cells.push(col)
-  }
-
-  return (
-    <div className={cn("grid grid-flow-col gap-[3px]", className)}>
-      {cells.map((col, i) => (
-        <div key={i} className="grid grid-rows-7 gap-[3px]">
-          {col.map((c) => (
-            <i
-              key={c.key}
-              title={c.key}
-              className={cn(
-                "block aspect-square w-full rounded-sm",
-                HEAT[Math.max(0, Math.min(4, c.level))]
-              )}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ─── Per-track closure bar ───────────────────────────────────────────────────
-
 /** The `.mini` bar: solid progress, a notch at the requirement. */
 export function MiniGapBar({
   proven,
