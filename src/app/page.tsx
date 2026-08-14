@@ -108,7 +108,9 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-4">
-                <Button variant="lime" asChild>
+                {/* Neutral pill, matching the nav's Get started: still a
+                    button, but the lit screen stays the loudest thing here. */}
+                <Button variant="pill" asChild>
                   <Link href="/sign-up">Analyse your resume</Link>
                 </Button>
                 <Link
