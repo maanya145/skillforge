@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { ChevronRight, IndianRupee } from "lucide-react"
+import { useMemo, useState, useSyncExternalStore } from "react"
+import { ChevronRight } from "lucide-react"
 
 import { rankCerts, type CatalogCert } from "@/lib/ranking/rank"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -19,6 +19,28 @@ const VERDICT = {
 const BUDGETS = [0, 2000, 5000, 10000, 20000, 40000, Infinity]
 
 const STORAGE_KEY = "skillforge.certBudget"
+const NO_LIMIT = BUDGETS.length - 1
+
+/**
+ * The saved budget, read the hydration-safe way.
+ *
+ * localStorage does not exist during SSR, so an effect that setStates on mount
+ * would both flash the wrong verdicts and trip the lint rule against cascading
+ * renders. `useSyncExternalStore` with a server snapshot is the supported
+ * shape, and subscribing to `storage` means a second tab stays in step.
+ */
+function subscribeToStorage(onChange: () => void) {
+  window.addEventListener("storage", onChange)
+  return () => window.removeEventListener("storage", onChange)
+}
+
+function readStoredBudget() {
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  const parsed = Number(raw)
+  return raw !== null && Number.isInteger(parsed) && parsed >= 0 && parsed < BUDGETS.length
+    ? parsed
+    : NO_LIMIT
+}
 
 const rupees = (n: number) => `₹${n.toLocaleString("en-IN")}`
 
@@ -51,21 +73,21 @@ export function Certifications({
   // An artifact is something you come back to, so it has to remember what you
   // set. Device-local rather than a column: the budget is a thinking tool, and
   // a round trip on every slider tick would make it feel like a form.
-  const [budgetIndex, setBudgetIndex] = useState(BUDGETS.length - 1)
+  const saved = useSyncExternalStore(
+    subscribeToStorage,
+    readStoredBudget,
+    () => NO_LIMIT
+  )
+  // Once the student touches the slider their choice wins, so the control does
+  // not fight the stored value it is about to overwrite.
+  const [chosen, setChosen] = useState<number | null>(null)
+  const budgetIndex = chosen ?? saved
+
   const [countProjects, setCountProjects] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (saved === null) return
-    const parsed = Number(saved)
-    if (Number.isInteger(parsed) && parsed >= 0 && parsed < BUDGETS.length) {
-      setBudgetIndex(parsed)
-    }
-  }, [])
-
   function chooseBudget(index: number) {
-    setBudgetIndex(index)
+    setChosen(index)
     window.localStorage.setItem(STORAGE_KEY, String(index))
   }
 
