@@ -54,6 +54,26 @@ An empty-but-present key is strictly worse than no key.
 real key lifts the shared rate limits and unlocks the paid models; nothing else
 changes.
 
+**`GITHUB_TOKEN` is optional, but not really.** The portfolio verifier reads
+public repositories without one, at GitHub's unauthenticated limit of 60
+requests per hour **per IP**. That IP is shared on Vercel, so the limit is
+realistic locally and unrealistic in production. A token lifts it to 5,000.
+
+Create a **fine-grained** token at
+[github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens)
+with *Public Repositories (read-only)* and no account permissions, then add it
+to `.env.local` as `GITHUB_TOKEN`. Do not reuse a `gh` CLI token: those carry
+`repo` and `workflow` write scopes, and nothing here ever writes to GitHub.
+
+Verify with `npm run check:portfolio` — it inspects `vercel/next.js` by default
+and prints which signals were detected, or pass an `owner/repo` of your own.
+
+**`FIRECRAWL_API_KEY` is optional.** Without it, PDFs with no text layer (scans,
+photos, Canva exports) are told to use the paste fallback. With it, they are
+OCR'd through Firecrawl's `/v2/parse`. This is the only point where a resume
+leaves our infrastructure, so it stays off unless the key is set. Verify with
+`npm run check:ocr`.
+
 This is also why agents don't use Mastra's model router. `model:
 "opencode/hy3-free"` makes the router resolve `OPENCODE_API_KEY` and throw when
 it's absent, so it can't reach the free tier at all. Passing an

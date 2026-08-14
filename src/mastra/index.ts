@@ -1,6 +1,7 @@
 import { Mastra } from "@mastra/core"
 
 import { resumeExtractorAgent } from "./agents/resume-extractor"
+import { portfolioVerifierAgent } from "./agents/portfolio-verifier"
 import { analyzeResumeWorkflow } from "./workflows/analyze-resume"
 
 /**
@@ -24,6 +25,9 @@ import { analyzeResumeWorkflow } from "./workflows/analyze-resume"
  * scope it to the `mastra` schema so drizzle-kit leaves it alone.
  */
 export const mastra = new Mastra({
-  agents: { resumeExtractorAgent },
+  // The mentor is absent by design: it is built per request with the student's
+  // id closed over (see agents/mentor.ts), so there is no single instance to
+  // register. The verifier takes a public URL and needs no such scoping.
+  agents: { resumeExtractorAgent, portfolioVerifierAgent },
   workflows: { analyzeResumeWorkflow },
 })
