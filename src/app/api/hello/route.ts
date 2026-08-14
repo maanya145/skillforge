@@ -34,7 +34,7 @@ const bodySchema = z.object({
       { message: "transcript too long" }
     )
     // The last word must be the visitor's, or there is nothing to answer.
-    .refine((m) => m[m.length - 1].role === "user", {
+    .refine((m) => m.length > 0 && m[m.length - 1].role === "user", {
       message: "last message must be from the user",
     }),
 })

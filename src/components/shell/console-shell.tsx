@@ -206,7 +206,7 @@ export function ConsoleShell({
           <motion.span
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-[16px] opacity-70" // check-design-ignore
-            style={{ background: sheen }}
+            style={{ background: sheen, transform: "translateZ(5px)" }}
           />
 
           {/* Power LED — lit because the screen is. */}
@@ -218,7 +218,10 @@ export function ConsoleShell({
           {/* ── Screen, recessed into the shell ─────────────────────────── */}
           <div
             className="rounded-sm bg-black p-[3px] shadow-[0_2px_6px_rgba(0,0,0,0.7)_inset]"
-            style={{ transform: "translateZ(-6px)" }}
+            // The recessed look comes from the bezel and inset shadow, NOT a
+            // negative z: behind the body's opaque face, a child does not
+            // render at all. Slightly proud, below the controls.
+            style={{ transform: "translateZ(4px)" }}
           >
             <div className="relative overflow-hidden rounded-[2px] bg-void">
               {/* Glass: a fixed diagonal glare so the surface reads as glazed. */}
