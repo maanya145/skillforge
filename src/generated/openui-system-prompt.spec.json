@@ -1,0 +1,209 @@
+{
+  "root": "Answer",
+  "components": {
+    "Answer": {
+      "signature": "Answer(blocks: (Text | Gauge | Stat | Resource | Steps)[])",
+      "description": "The root container. Holds an ordered sequence of blocks that together answer the student's question."
+    },
+    "Text": {
+      "signature": "Text(content: string)",
+      "description": "A short paragraph of plain prose. Use for explanation and context between visual blocks."
+    },
+    "Gauge": {
+      "signature": "Gauge(trackId: string, name: string, provenLevel: number, requiredLevel: number, weeksToClose: number, note: string)",
+      "description": "A skill track gauge showing what the student has proven against what the role requires. Use when discussing a specific track's level. Always take the numbers from a tool result — never estimate them."
+    },
+    "Stat": {
+      "signature": "Stat(label: string, value: string, caption?: string)",
+      "description": "A single labelled number, e.g. readiness or open gap count. Use sparingly, for the figure the answer turns on."
+    },
+    "Resource": {
+      "signature": "Resource(title: string, url: string, source: string, summary: string, tags?: string[])",
+      "description": "A link to a course, project or repository, with what it closes. Only use URLs returned by a tool."
+    },
+    "Steps": {
+      "signature": "Steps(items: string[])",
+      "description": "An ordered list of concrete next actions. Each item should be something the student could start today."
+    }
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "Answer": {
+        "$ref": "#/$defs/Answer"
+      },
+      "Text": {
+        "$ref": "#/$defs/Text"
+      },
+      "Gauge": {
+        "$ref": "#/$defs/Gauge"
+      },
+      "Stat": {
+        "$ref": "#/$defs/Stat"
+      },
+      "Resource": {
+        "$ref": "#/$defs/Resource"
+      },
+      "Steps": {
+        "$ref": "#/$defs/Steps"
+      }
+    },
+    "required": [
+      "Answer",
+      "Text",
+      "Gauge",
+      "Stat",
+      "Resource",
+      "Steps"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "blocks": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "$ref": "#/$defs/Gauge"
+                },
+                {
+                  "$ref": "#/$defs/Stat"
+                },
+                {
+                  "$ref": "#/$defs/Resource"
+                },
+                {
+                  "$ref": "#/$defs/Steps"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "blocks"
+        ],
+        "additionalProperties": false,
+        "description": "The root container. Holds an ordered sequence of blocks that together answer the student's question."
+      },
+      "Text": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false,
+        "description": "A short paragraph of plain prose. Use for explanation and context between visual blocks."
+      },
+      "Gauge": {
+        "type": "object",
+        "properties": {
+          "trackId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "provenLevel": {
+            "type": "number"
+          },
+          "requiredLevel": {
+            "type": "number"
+          },
+          "weeksToClose": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "trackId",
+          "name",
+          "provenLevel",
+          "requiredLevel",
+          "weeksToClose",
+          "note"
+        ],
+        "additionalProperties": false,
+        "description": "A skill track gauge showing what the student has proven against what the role requires. Use when discussing a specific track's level. Always take the numbers from a tool result — never estimate them."
+      },
+      "Stat": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "additionalProperties": false,
+        "description": "A single labelled number, e.g. readiness or open gap count. Use sparingly, for the figure the answer turns on."
+      },
+      "Resource": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "source",
+          "summary"
+        ],
+        "additionalProperties": false,
+        "description": "A link to a course, project or repository, with what it closes. Only use URLs returned by a tool."
+      },
+      "Steps": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "description": "An ordered list of concrete next actions. Each item should be something the student could start today."
+      }
+    }
+  }
+}

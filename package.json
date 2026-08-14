@@ -27,12 +27,15 @@
     "check:tools": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-tool-labels.mts",
     "check:ocr": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-ocr.mts",
     "check:portfolio": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-portfolio.mts",
-    "check:discovery": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-discovery.mts"
+    "check:discovery": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-discovery.mts",
+    "genui:prompt": "npx --yes @openuidev/cli@latest generate src/components/genui/library.tsx --out src/generated/openui-system-prompt.txt --no-telemetry && node scripts/inline-genui-prompt.mjs",
+    "check:studio": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-studio.mts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.4",
     "@mastra/core": "^1.58.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@openuidev/react-lang": "^0.2.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
