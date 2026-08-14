@@ -177,6 +177,92 @@ describe("ranking", () => {
     expect(cert.rationale).toBe("The CI retrofit proves this for free.")
   })
 
+  /**
+   * The budget is an override, not a fudge to the score — a certificate you
+   * cannot afford is a skip however good it is, and the score stays visible so
+   * the reason is legible. The Practice artifact re-runs this in the browser,
+   * so these cases are what the slider is actually doing.
+   */
+  describe("budget", () => {
+    const expensive = [
+      {
+        id: "pricey",
+        name: "Expensive but excellent",
+        provider: "X",
+        costInr: 18000,
+        examWindow: null,
+        baseValue: 6,
+        provesTrackIds: ["system-design"],
+        cheaperAlternative: null,
+      },
+    ]
+
+    it("leaves verdicts untouched when no budget is set", () => {
+      const [cert] = rankCerts(expensive, gaps, new Set(), TRACK_NAMES)
+      expect(cert.verdict).toBe("worth_it")
+      expect(cert.breakdown.overBudget).toBe(false)
+    })
+
+    it("overrides a good cert to skip when it costs more than the budget", () => {
+      const [cert] = rankCerts(expensive, gaps, new Set(), TRACK_NAMES, {
+        budgetInr: 5000,
+      })
+      expect(cert.verdict).toBe("skip")
+      expect(cert.breakdown.overBudget).toBe(true)
+      // The score is unchanged — only the decision flipped.
+      expect(cert.score).toBeGreaterThanOrEqual(4)
+      expect(cert.rationale).toContain("over the ₹5,000")
+    })
+
+    it("keeps it when the budget covers the cost exactly", () => {
+      const [cert] = rankCerts(expensive, gaps, new Set(), TRACK_NAMES, {
+        budgetInr: 18000,
+      })
+      expect(cert.verdict).toBe("worth_it")
+      expect(cert.breakdown.overBudget).toBe(false)
+    })
+
+    it("never rejects a free certificate, even at a zero budget", () => {
+      const [cert] = rankCerts(
+        [{ ...expensive[0], id: "free", costInr: null }],
+        gaps,
+        new Set(),
+        TRACK_NAMES,
+        { budgetInr: 0 }
+      )
+      expect(cert.breakdown.overBudget).toBe(false)
+      expect(cert.verdict).toBe("worth_it")
+    })
+  })
+
+  it("exposes every term of the score so the UI can show its working", () => {
+    const [cert] = rankCerts(
+      [
+        {
+          id: "b",
+          name: "Bench",
+          provider: "X",
+          costInr: 8000,
+          examWindow: null,
+          baseValue: 2,
+          provesTrackIds: ["system-design"],
+          cheaperAlternative: null,
+        },
+      ],
+      gaps,
+      new Set(),
+      TRACK_NAMES
+    )
+    const { baseValue, gapPoints, costPenalty, redundancyPenalty } = cert.breakdown
+    expect(costPenalty).toBe(2) // 8000 / 4000
+    expect(redundancyPenalty).toBe(0)
+    // The terms must reconstruct the score, or the panel would be lying.
+    expect(baseValue + gapPoints - costPenalty - redundancyPenalty).toBeCloseTo(
+      cert.score,
+      1
+    )
+  })
+
   it("doubles question weight on gap tracks and caps the list", () => {
     const catalog = Array.from({ length: 12 }, (_, i) => ({
       id: `q${i}`,

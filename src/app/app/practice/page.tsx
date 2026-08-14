@@ -5,6 +5,16 @@ import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
 import { getRecommendations } from "@/lib/plan-queries"
 import { getDiscoveries } from "@/lib/discovery/discover"
+import { getCertInputs } from "@/lib/cert-artifact"
+import { rankCerts, type CertVerdict } from "@/lib/ranking/rank"
+import { ArrowRight } from "lucide-react"
+
+/** Preview badges only — the full verdict styling lives in the artifact. */
+const CERT_VARIANT: Record<CertVerdict, "ok" | "alt" | "err"> = {
+  worth_it: "ok",
+  later: "alt",
+  skip: "err",
+}
 import { db, schema } from "@/db"
 import { FoundForYou } from "./found-for-you"
 import { Button } from "@/components/ui/button"
@@ -15,15 +25,6 @@ import { AppHeading, SubCard } from "@/components/shell/frame"
 
 import { QuestionList } from "./question-list"
 
-const VERDICT: Record<
-  string,
-  { label: string; variant: "lime" | "alt" | "default" }
-> = {
-  worth_it: { label: "Worth it", variant: "lime" },
-  later: { label: "Later", variant: "alt" },
-  skip: { label: "Skip", variant: "default" },
-}
-
 export const metadata = { title: "Practice · SkillForge" }
 
 export default async function PracticePage() {
@@ -33,6 +34,25 @@ export default async function PracticePage() {
   const recs = run ? await getRecommendations(run.id) : null
 
   const discoveries = run ? await getDiscoveries(student.id, run.id) : []
+  // The preview is scored server-side at the default (no budget), so the card
+  // is meaningful before any JavaScript runs.
+  const certInputs = run ? await getCertInputs(run.id) : null
+  const certPreview = certInputs
+    ? (() => {
+        const ranked = rankCerts(
+          certInputs.catalog,
+          certInputs.gaps,
+          new Set(certInputs.coveredTrackIds),
+          certInputs.trackNames
+        )
+        return {
+          total: ranked.length,
+          worthIt: ranked.filter((c) => c.verdict === "worth_it").length,
+          skipped: ranked.filter((c) => c.verdict === "skip").length,
+          top: ranked.slice(0, 3),
+        }
+      })()
+    : null
   const tracks = await db
     .select({ id: schema.skillTracks.id, name: schema.skillTracks.name })
     .from(schema.skillTracks)
@@ -127,36 +147,46 @@ export default async function PracticePage() {
                 />
               </div>
 
-              <SubCard>
-                <AppHeading
-                  className="px-0"
-                  aside={`${recs.certs.filter((c) => c.verdict === "worth_it").length} worth it`}
-                >
-                  Certifications
-                </AppHeading>
-                <div className="flex flex-col">
-                  {recs.certs.map((c) => {
-                    const v = VERDICT[c.verdict]
-                    return (
+              {/* The artifact's preview card. The decision itself lives on its
+                  own surface — this is the handle, not the tool. */}
+              {certPreview ? (
+                <SubCard className="flex flex-col gap-3">
+                  <AppHeading
+                    className="px-0"
+                    aside={`${certPreview.worthIt} of ${certPreview.total} worth it`}
+                  >
+                    Certifications
+                  </AppHeading>
+                  <p className="text-xs text-fog">
+                    {certPreview.skipped === certPreview.total
+                      ? "Every one of these says don't bother against your current gaps."
+                      : `${certPreview.skipped} of ${certPreview.total} say don't bother.`}{" "}
+                    Set a budget and the verdicts re-decide live.
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {certPreview.top.map((c) => (
                       <div
-                        key={c.rank}
-                        className="flex flex-col gap-1 border-t border-graphite/70 py-2.5 first:border-t-0"
+                        key={c.id}
+                        className="flex items-baseline justify-between gap-3"
                       >
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="text-caption text-mist">
-                            {c.name}
-                          </span>
-                          <Badge variant={v.variant}>
-                            {c.verdict === "worth_it" ? <BadgeDot /> : null}
-                            {v.label}
-                          </Badge>
-                        </div>
-                        <span className="text-xs text-ash">{c.rationale}</span>
+                        <span className="truncate text-xs text-mist">
+                          {c.name}
+                        </span>
+                        <Badge variant={CERT_VARIANT[c.verdict]}>
+                          {c.verdict === "worth_it" ? <BadgeDot /> : null}
+                          {c.verdict.replace("_", " ")}
+                        </Badge>
                       </div>
-                    )
-                  })}
-                </div>
-              </SubCard>
+                    ))}
+                  </div>
+                  <Button variant="ghost" size="sm" asChild className="self-start">
+                    <Link href="/app/certifications">
+                      Weigh them up
+                      <ArrowRight aria-hidden />
+                    </Link>
+                  </Button>
+                </SubCard>
+              ) : null}
             </div>
           </div>
         )}

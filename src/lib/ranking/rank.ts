@@ -91,11 +91,28 @@ export interface CatalogCert {
   cheaperAlternative: string | null
 }
 
+/** Every term of the score, so the UI can show its working rather than assert it. */
+export interface CertBreakdown {
+  /** What the certificate is worth on its own, before this student. */
+  baseValue: number
+  /** Σ(weightₜ · gapₜ) over the open tracks it proves. */
+  gapPoints: number
+  /** costInr / 4000 — the price expressed in readiness points. */
+  costPenalty: number
+  /** 3 if a scheduled project already proves the same thing for free. */
+  redundancyPenalty: number
+  /** Open tracks it actually touches. */
+  closesTrackIds: string[]
+  /** True when the price is above the student's stated budget. */
+  overBudget: boolean
+}
+
 export interface RankedCert extends CatalogCert {
   score: number
   rank: number
   verdict: CertVerdict
   rationale: string
+  breakdown: CertBreakdown
 }
 
 export function rankCerts(
@@ -103,9 +120,22 @@ export function rankCerts(
   gaps: GapResult[],
   /** Track ids a scheduled project already closes — makes the cert redundant */
   coveredByProjects: Set<string>,
-  trackNames: Record<string, string>
+  trackNames: Record<string, string>,
+  options: {
+    /**
+     * What the student can actually spend. Null means "not stated", which is
+     * the analysis default — the score already prices cost in, so this only
+     * exists so the Practice screen can answer "what if I only had ₹5,000".
+     *
+     * Applied as an override, not a fudge to the score: an unaffordable
+     * certificate is a skip no matter how good it is, and the score stays
+     * visible so the reason is obvious.
+     */
+    budgetInr?: number | null
+  } = {}
 ): RankedCert[] {
   const byTrack = new Map(gaps.map((g) => [g.trackId, g]))
+  const budget = options.budgetInr ?? null
 
   return catalog
     .map((c) => {
@@ -114,13 +144,33 @@ export function rankCerts(
         c.cheaperAlternative !== null &&
         c.provesTrackIds.some((id) => coveredByProjects.has(id))
 
+      const costPenalty = (c.costInr ?? 0) / 4000
+      const redundancyPenalty = redundant ? 3 : 0
       const score = round1(
-        c.baseValue + points - (c.costInr ?? 0) / 4000 - (redundant ? 3 : 0)
+        c.baseValue + points - costPenalty - redundancyPenalty
       )
-      const verdict: CertVerdict =
-        score >= 4 ? "worth_it" : score >= 1.5 ? "later" : "skip"
+      const overBudget = budget !== null && (c.costInr ?? 0) > budget
 
-      const rationale = redundant
+      const verdict: CertVerdict = overBudget
+        ? "skip"
+        : score >= 4
+          ? "worth_it"
+          : score >= 1.5
+            ? "later"
+            : "skip"
+
+      const breakdown: CertBreakdown = {
+        baseValue: c.baseValue,
+        gapPoints: round1(points),
+        costPenalty: round1(costPenalty),
+        redundancyPenalty,
+        closesTrackIds: closes,
+        overBudget,
+      }
+
+      const rationale = overBudget
+        ? `₹${(c.costInr ?? 0).toLocaleString("en-IN")} is over the ₹${budget!.toLocaleString("en-IN")} you set — worth ${score} on the numbers, but you can't spend it.`
+        : redundant
         ? (c.cheaperAlternative as string)
         : verdict === "worth_it"
           ? `Proves ${closes.map((id) => trackNames[id] ?? id).join(", ") || "breadth"} where you're short${c.costInr ? ` · ₹${c.costInr.toLocaleString("en-IN")}` : ""}${c.examWindow ? ` · ${c.examWindow}` : ""}`
@@ -130,7 +180,7 @@ export function rankCerts(
               ? `Off your gap list — the tracks it proves are already at the bar.`
               : `The cost doesn't buy enough readiness against your open gaps.`
 
-      return { ...c, score, verdict, rationale, rank: 0 }
+      return { ...c, score, verdict, rationale, breakdown, rank: 0 }
     })
     .sort((a, b) => b.score - a.score)
     .map((c, i) => ({ ...c, rank: i + 1 }))

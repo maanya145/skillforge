@@ -20,6 +20,7 @@ import {
   Settings,
   Target,
   BookOpen,
+  BadgeCheck,
   Sparkles,
   CornerDownLeft,
 } from "lucide-react"
@@ -54,6 +55,7 @@ const SCREENS: [string, string, string, React.ReactNode][] = [
   ["/app/practice", "Practice", "Ranked projects, certs and questions", <Dumbbell key="p" className="size-4" />],
   ["/app/progress", "Progress", "Readiness trend and study log", <TrendingUp key="g" className="size-4" />],
   ["/app/chat", "Mentor", "Chat grounded in your numbers", <MessageCircle key="c" className="size-4" />],
+  ["/app/certifications", "Certifications", "Weigh certifications against your budget", <BadgeCheck key="v" className="size-4" />],
   ["/app/studio", "Studio", "Ask a question, get an interface back", <Sparkles key="u" className="size-4" />],
   ["/app/settings", "Settings", "Role, hours and profile", <Settings key="s" className="size-4" />],
   ["/benchmarks", "Benchmarks", "The published rubric every level is scored against", <BookOpen key="b" className="size-4" />],
