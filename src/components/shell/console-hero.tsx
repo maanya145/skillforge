@@ -2,23 +2,29 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useReducedMotion } from "framer-motion"
 import { FileUp, MessageCircle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { ConsoleShell, type DpadDir } from "@/components/shell/console-shell"
 
 /**
- * The landing-page console: a boot menu with two choices, and a mentor chat
- * that runs INSIDE the device's screen.
+ * The landing-page console: boots, then offers two doors.
  *
- * The menu routes "Upload a resume" to sign-up; "Ask the mentor" flips the
- * screen into a tiny 1-bit terminal talking to /api/hello — a toolless,
- * unauthenticated version of the mentor whose whole job is explaining the
- * product. B backs out of the chat; the crank scrolls the transcript, which
- * is the most Playdate-correct thing a crank could do.
+ * On mount the screen runs a short boot — the wordmark types itself on, a
+ * block gauge fills, the LED pulses — then lands on a menu with two choices.
+ * "Upload a resume" routes to sign-up; "Ask the mentor" flips the screen into
+ * a tiny 1-bit terminal talking to /api/hello, a toolless unauthenticated
+ * mentor whose whole job is explaining the product. B backs out; the crank
+ * scrolls the transcript, which is the most Playdate-correct job a crank
+ * could have.
+ *
+ * The boot is theatre and is treated as such: any input skips it, and
+ * reduced-motion users never see it at all.
  */
 
 type Message = { role: "user" | "assistant"; content: string }
+type Mode = "boot" | "menu" | "chat"
 
 const MENU = [
   {
@@ -39,9 +45,65 @@ const GREETING: Message = {
     "hi — i'm the mentor. ask me what skillforge does, how the scoring works, or why the numbers can be trusted.",
 }
 
+// ── Boot sequence ──────────────────────────────────────────────────────────
+
+const BOOT_WORD = "skillforge"
+const BOOT_BLOCKS = 8
+/** One tick types a letter or fills a block. */
+const BOOT_TICK_MS = 90
+/** Total ticks: the word, a beat, the gauge. */
+const BOOT_TOTAL = BOOT_WORD.length + 2 + BOOT_BLOCKS
+/** Hold on the full gauge before the menu, so the finish reads as an event. */
+const BOOT_HOLD_MS = 450
+
+const BOOT_STATUS = [
+  "waking the benchmark",
+  "calibrating gauges",
+  "ready",
+] as const
+
+function BootScreen({ step }: { step: number }) {
+  const typed = BOOT_WORD.slice(0, Math.min(step, BOOT_WORD.length))
+  const blocks = Math.max(0, step - BOOT_WORD.length - 2)
+  const status =
+    blocks >= BOOT_BLOCKS
+      ? BOOT_STATUS[2]
+      : blocks > BOOT_BLOCKS / 2
+        ? BOOT_STATUS[1]
+        : BOOT_STATUS[0]
+
+  return (
+    <div className="flex h-[170px] flex-col items-center justify-center gap-3 font-mono">
+      <p className="text-[15px] font-[590] tracking-[0.22em] text-bone uppercase">
+        {typed}
+        <span aria-hidden className="animate-pulse">
+          ▌
+        </span>
+      </p>
+      {step > BOOT_WORD.length + 1 ? (
+        <>
+          <p aria-hidden className="text-[13px] tracking-[0.3em] text-bone/80">
+            {"▓".repeat(Math.min(blocks, BOOT_BLOCKS))}
+            <span className="text-bone/25">
+              {"░".repeat(Math.max(0, BOOT_BLOCKS - blocks))}
+            </span>
+          </p>
+          <p className="text-[10px] tracking-[0.14em] text-bone/50 uppercase">
+            {status}
+          </p>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+// ── The device ─────────────────────────────────────────────────────────────
+
 export function ConsoleHero({ className }: { className?: string }) {
   const router = useRouter()
-  const [mode, setMode] = React.useState<"menu" | "chat">("menu")
+  const reduceMotion = useReducedMotion()
+  const [mode, setMode] = React.useState<Mode>("boot")
+  const [bootStep, setBootStep] = React.useState(0)
   const [index, setIndex] = React.useState(0)
 
   const [messages, setMessages] = React.useState<Message[]>([GREETING])
@@ -50,6 +112,32 @@ export function ConsoleHero({ className }: { className?: string }) {
   const abortRef = React.useRef<AbortController | null>(null)
   const logRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
+
+  // Drive the boot from a timer — every state write happens inside async
+  // callbacks, and the interval dies with the component or the first skip.
+  React.useEffect(() => {
+    if (mode !== "boot") return
+    if (reduceMotion) {
+      const id = setTimeout(() => setMode("menu"), 0)
+      return () => clearTimeout(id)
+    }
+    let step = 0
+    let hold: ReturnType<typeof setTimeout> | undefined
+    const tick = setInterval(() => {
+      step += 1
+      setBootStep(step)
+      if (step >= BOOT_TOTAL) {
+        clearInterval(tick)
+        hold = setTimeout(() => setMode("menu"), BOOT_HOLD_MS)
+      }
+    }, BOOT_TICK_MS)
+    return () => {
+      clearInterval(tick)
+      if (hold) clearTimeout(hold)
+    }
+  }, [mode, reduceMotion])
+
+  const skipBoot = React.useCallback(() => setMode("menu"), [])
 
   // Keep the newest line visible as the reply streams in. DOM scroll only —
   // no state writes, so it cannot cascade renders.
@@ -131,7 +219,10 @@ export function ConsoleHero({ className }: { className?: string }) {
           } else if (event === "error") {
             setMessages((m) => [
               ...m.slice(0, -1),
-              { role: "assistant", content: data.error ?? "something broke — try again" },
+              {
+                role: "assistant",
+                content: data.error ?? "something broke — try again",
+              },
             ])
           }
         }
@@ -150,10 +241,11 @@ export function ConsoleHero({ className }: { className?: string }) {
   }
 
   const scrollLog = (dir: 1 | -1) =>
-    logRef.current?.scrollBy({ top: dir * 28, behavior: "smooth" })
+    logRef.current?.scrollBy({ top: dir * 32, behavior: "smooth" })
 
   const onDpad = (dir: DpadDir) => {
-    if (mode === "menu") {
+    if (mode === "boot") skipBoot()
+    else if (mode === "menu") {
       if (dir === "up" || dir === "down")
         setIndex((i) => (i + 1) % MENU.length) // two rows: either arrow flips
     } else if (dir === "up") scrollLog(-1)
@@ -163,21 +255,39 @@ export function ConsoleHero({ className }: { className?: string }) {
   return (
     <ConsoleShell
       hero
+      ledPulse={mode === "boot"}
       className={className}
       onDpad={onDpad}
-      onA={mode === "menu" ? choose : send}
-      onB={mode === "menu" ? () => setIndex(0) : leaveChat}
-      aTitle={mode === "menu" ? MENU[index].label : "Send"}
-      bTitle={mode === "menu" ? "Back" : "Back to menu"}
-      onCrankStep={(dir) => (mode === "menu" ? onDpad(dir === 1 ? "down" : "up") : scrollLog(dir))}
-      crankLabel={mode === "menu" ? "Crank to move the cursor" : "Crank to scroll the conversation"}
+      onA={mode === "boot" ? skipBoot : mode === "menu" ? choose : send}
+      onB={mode === "chat" ? leaveChat : mode === "boot" ? skipBoot : () => setIndex(0)}
+      aTitle={
+        mode === "boot" ? "Skip" : mode === "menu" ? MENU[index].label : "Send"
+      }
+      bTitle={mode === "chat" ? "Back to menu" : "Back"}
+      onCrankStep={(dir) =>
+        mode === "boot"
+          ? skipBoot()
+          : mode === "menu"
+            ? onDpad(dir === 1 ? "down" : "up")
+            : scrollLog(dir)
+      }
+      crankLabel={
+        mode === "chat"
+          ? "Crank to scroll the conversation"
+          : "Crank to move the cursor"
+      }
       headerRight={
-        <span className="font-mono text-[10px] tabular text-bone/60">
-          {mode === "menu" ? "boot" : "mentor"}
+        <span className="font-mono text-[11px] tabular text-bone/60">
+          {mode === "boot" ? "bios" : mode === "menu" ? "boot" : "mentor"}
         </span>
       }
       footer={
-        mode === "menu" ? (
+        mode === "boot" ? (
+          <>
+            <span>starting up</span>
+            <span>Ⓐ skip</span>
+          </>
+        ) : mode === "menu" ? (
           <>
             <span>↑↓ move</span>
             <span>Ⓐ select</span>
@@ -190,9 +300,19 @@ export function ConsoleHero({ className }: { className?: string }) {
         )
       }
       screen={
-        mode === "menu" ? (
-          <div className="px-1 py-1.5 text-[12px]">
-            <p className="px-1.5 pb-2 text-[10px] leading-snug text-bone/60">
+        mode === "boot" ? (
+          // The whole screen is a skip target — theatre must never gate.
+          <button
+            type="button"
+            aria-label="Skip the boot animation"
+            onClick={skipBoot}
+            className="block w-full cursor-pointer outline-none"
+          >
+            <BootScreen step={bootStep} />
+          </button>
+        ) : mode === "menu" ? (
+          <div className="px-1.5 py-2 text-[14px]">
+            <p className="px-2 pb-2.5 text-[11px] leading-snug text-bone/60">
               your resume, measured against a published role bar. no invented
               numbers.
             </p>
@@ -210,16 +330,16 @@ export function ConsoleHero({ className }: { className?: string }) {
                     else choose()
                   }}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-[2px] px-1.5 py-1.5 text-left font-[590] outline-none",
+                    "flex w-full items-center gap-2.5 rounded-[2px] px-2 py-2 text-left font-[590] outline-none",
                     cursor ? "bg-bone text-void" : "text-bone/75 hover:text-bone"
                   )}
                 >
-                  <item.icon aria-hidden className="size-3.5" strokeWidth={2.25} />
+                  <item.icon aria-hidden className="size-4" strokeWidth={2.25} />
                   <span className="min-w-0">
                     <span className="block truncate">{item.label}</span>
                     <span
                       className={cn(
-                        "block truncate text-[9px] font-normal",
+                        "block truncate text-[10px] font-normal",
                         cursor ? "text-void/70" : "text-bone/45"
                       )}
                     >
@@ -236,10 +356,10 @@ export function ConsoleHero({ className }: { className?: string }) {
             })}
           </div>
         ) : (
-          <div className="flex h-[190px] flex-col text-[11px]">
+          <div className="flex h-[230px] flex-col text-[13px]">
             <div
               ref={logRef}
-              className="min-h-0 flex-1 space-y-1.5 overflow-y-auto px-2 py-1.5"
+              className="min-h-0 flex-1 space-y-2 overflow-y-auto px-2.5 py-2"
               aria-live="polite"
             >
               {messages.map((m, i) => (
@@ -254,7 +374,9 @@ export function ConsoleHero({ className }: { className?: string }) {
                     {m.role === "user" ? "› " : "mentor: "}
                   </span>
                   {m.content}
-                  {streaming && i === messages.length - 1 && m.role === "assistant" ? (
+                  {streaming &&
+                  i === messages.length - 1 &&
+                  m.role === "assistant" ? (
                     <span aria-hidden className="animate-pulse">
                       ▌
                     </span>
@@ -267,7 +389,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                 e.preventDefault()
                 send()
               }}
-              className="flex items-center gap-1.5 border-t border-bone/20 px-2 py-1.5"
+              className="flex items-center gap-2 border-t border-bone/20 px-2.5 py-2"
             >
               <span aria-hidden className="font-[590] text-bone/60">
                 ›

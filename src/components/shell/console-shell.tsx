@@ -46,6 +46,7 @@ export function ConsoleShell({
   crankLabel = "Crank",
   crankValue,
   hero = false,
+  ledPulse = false,
   className,
 }: {
   /** What shows inside the glass. Keep it 1-bit: bone on void, nothing else. */
@@ -65,6 +66,8 @@ export function ConsoleShell({
   crankValue?: { min: number; max: number; now: number; text: string }
   /** Larger cut for the landing hero, where it stands in for product photography. */
   hero?: boolean
+  /** Pulse the power LED — the device is doing something. */
+  ledPulse?: boolean
   className?: string
 }) {
   const reduceMotion = useReducedMotion()
@@ -166,7 +169,7 @@ export function ConsoleShell({
     <div
       className={cn(
         "relative select-none",
-        hero ? "w-[300px] sm:w-[340px]" : "w-[264px]",
+        hero ? "w-[340px] sm:w-[420px]" : "w-[264px]",
         className
       )}
       style={{ perspective: "900px" }}
@@ -196,7 +199,7 @@ export function ConsoleShell({
         <div
           className={cn(
             "relative rounded-[16px]", // check-design-ignore -- moulded corner
-            hero ? "p-5" : "p-4",
+            hero ? "p-6" : "p-4",
             "bg-[linear-gradient(172deg,#1d1f22_0%,#141517_52%,#0c0d0e_100%)]",
             "shadow-[0_1px_0_rgba(255,255,255,0.09)_inset,0_-2px_0_rgba(0,0,0,0.5)_inset,0_18px_40px_rgba(0,0,0,0.55)]"
           )}
@@ -212,7 +215,11 @@ export function ConsoleShell({
           {/* Power LED — lit because the screen is. */}
           <span
             aria-hidden
-            className="absolute top-3 right-3.5 size-1.5 rounded-full bg-pulse-green shadow-[0_0_6px_rgba(39,166,68,0.9)]"
+            className={cn(
+              "absolute top-3 right-3.5 rounded-full bg-pulse-green shadow-[0_0_6px_rgba(39,166,68,0.9)]",
+              hero ? "size-2" : "size-1.5",
+              ledPulse && "animate-pulse"
+            )}
           />
 
           {/* ── Screen, recessed into the shell ─────────────────────────── */}
@@ -231,7 +238,7 @@ export function ConsoleShell({
               />
 
               <div className="flex items-center justify-between border-b border-bone/20 px-2.5 py-1.5">
-                <span className="text-[10px] font-[590] tracking-[0.14em] text-bone uppercase">
+                <span className={cn("font-[590] tracking-[0.14em] text-bone uppercase", hero ? "text-[11px]" : "text-[10px]")}>
                   skillforge
                 </span>
                 {headerRight}
@@ -240,7 +247,7 @@ export function ConsoleShell({
               {screen}
 
               {footer ? (
-                <div className="flex items-center justify-between border-t border-bone/20 px-2.5 py-1 text-[9px] font-[590] text-bone/60 uppercase">
+                <div className={cn("flex items-center justify-between border-t border-bone/20 px-2.5 font-[590] text-bone/60 uppercase", hero ? "py-1.5 text-[10px]" : "py-1 text-[9px]")}>
                   {footer}
                 </div>
               ) : null}
@@ -251,13 +258,13 @@ export function ConsoleShell({
           <div
             className={cn(
               "flex items-center justify-between px-0.5",
-              hero ? "mt-5" : "mt-4"
+              hero ? "mt-6" : "mt-4"
             )}
             style={{ transform: "translateZ(12px)", transformStyle: "preserve-3d" }}
           >
             <DPad onDpad={onDpad} pressed={pressed} setPressed={setPressed} hero={hero} />
 
-            <div className={cn("flex items-end", hero ? "gap-3" : "gap-2.5")}>
+            <div className={cn("flex items-end", hero ? "gap-3.5" : "gap-2.5")}>
               <FaceButton label="B" title={bTitle} onPress={onB} hero={hero} />
               <FaceButton label="A" title={aTitle} onPress={onA} hero={hero} />
             </div>
@@ -268,7 +275,10 @@ export function ConsoleShell({
               the crank reads as MOUNTED, not floating beside the device. */}
           <span
             aria-hidden
-            className="absolute top-1/2 -right-2.5 h-12 w-3 -translate-y-1/2 rounded-r-[5px] bg-[linear-gradient(180deg,#1d1f22_0%,#141517_55%,#0c0d0e_100%)] shadow-[2px_0_4px_rgba(0,0,0,0.5)]"
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 rounded-r-[5px] bg-[linear-gradient(180deg,#1d1f22_0%,#141517_55%,#0c0d0e_100%)] shadow-[2px_0_4px_rgba(0,0,0,0.5)]",
+              hero ? "-right-3 h-14 w-3.5" : "-right-2.5 h-12 w-3"
+            )}
           />
           <div
             onPointerDown={onCrankDown}
@@ -284,7 +294,7 @@ export function ConsoleShell({
             aria-valuetext={crankValue?.text}
             className={cn(
               "absolute top-1/2 cursor-grab touch-none rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mist active:cursor-grabbing",
-              hero ? "-right-9 size-16" : "-right-8 size-14"
+              hero ? "-right-10 size-[72px]" : "-right-8 size-14"
             )}
             style={{ transform: "translateY(-50%) translateZ(18px)" }}
           >
@@ -297,9 +307,9 @@ export function ConsoleShell({
             >
               {/* Arm, handle at its far end, pivot cap on top. Bone against
                   the dark shell — the one bright mechanical part. */}
-              <span className="absolute top-1/2 left-1/2 h-1 w-1/2 origin-left -translate-y-1/2 rounded-full bg-bone shadow-[0_2px_3px_rgba(0,0,0,0.6)]" />
-              <span className="absolute top-1/2 right-0 h-5 w-1.5 -translate-y-1/2 rounded-full bg-bone shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
-              <span className="absolute top-1/2 left-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-smoke shadow-[0_1px_0_rgba(255,255,255,0.15)_inset]" />
+              <span className={cn("absolute top-1/2 left-1/2 w-1/2 origin-left -translate-y-1/2 rounded-full bg-bone shadow-[0_2px_3px_rgba(0,0,0,0.6)]", hero ? "h-1.5" : "h-1")} />
+              <span className={cn("absolute top-1/2 right-0 -translate-y-1/2 rounded-full bg-bone shadow-[0_2px_4px_rgba(0,0,0,0.6)]", hero ? "h-6 w-2" : "h-5 w-1.5")} />
+              <span className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-smoke shadow-[0_1px_0_rgba(255,255,255,0.15)_inset]", hero ? "size-3" : "size-2.5")} />
             </div>
           </div>
         </div>
@@ -357,7 +367,7 @@ function DPad({
   setPressed: (d: string | null) => void
   hero: boolean
 }) {
-  const arm = hero ? "21px" : "17px"
+  const arm = hero ? "24px" : "17px"
   const rock =
     pressed === "up"
       ? "rotateX(8deg)"
@@ -371,7 +381,7 @@ function DPad({
 
   return (
     <div
-      className={cn("relative", hero ? "size-[64px]" : "size-[52px]")}
+      className={cn("relative", hero ? "size-[72px]" : "size-[52px]")}
       style={{ perspective: "300px" }}
     >
       <span
@@ -434,7 +444,7 @@ function FaceButton({
       onClick={onPress}
       className={cn(
         "grid place-items-center rounded-full text-xs font-[590] text-mist",
-        hero ? "size-11" : "size-9",
+        hero ? "size-12 text-sm" : "size-9",
         "bg-[radial-gradient(circle_at_35%_30%,#3a3d42_0%,#232529_55%,#17181b_100%)]",
         "shadow-[0_3px_0_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.12)_inset]",
         "transition-transform duration-75 active:translate-y-[3px] active:shadow-[0_0_0_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.08)_inset]",
