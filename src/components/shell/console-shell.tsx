@@ -230,15 +230,15 @@ export function ConsoleShell({
             // render at all. Slightly proud, below the controls.
             style={{ transform: "translateZ(4px)" }}
           >
-            <div className="relative overflow-hidden rounded-[2px] bg-void">
+            <div className="relative overflow-hidden rounded-[2px] bg-bone">
               {/* Glass: a fixed diagonal glare so the surface reads as glazed. */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(115deg,rgba(255,255,255,0.05)_0%,transparent_38%)]"
+                className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(115deg,rgba(255,255,255,0.45)_0%,transparent_34%)]"
               />
 
-              <div className="flex items-center justify-between border-b border-bone/20 px-2.5 py-1.5">
-                <span className={cn("font-[590] tracking-[0.14em] text-bone uppercase", hero ? "text-[11px]" : "text-[10px]")}>
+              <div className="flex items-center justify-between border-b border-void/25 px-2.5 py-1.5">
+                <span className={cn("font-[590] tracking-[0.14em] text-void uppercase", hero ? "text-[11px]" : "text-[10px]")}>
                   skillforge
                 </span>
                 {headerRight}
@@ -247,7 +247,7 @@ export function ConsoleShell({
               {screen}
 
               {footer ? (
-                <div className={cn("flex items-center justify-between border-t border-bone/20 px-2.5 font-[590] text-bone/60 uppercase", hero ? "py-1.5 text-[10px]" : "py-1 text-[9px]")}>
+                <div className={cn("flex items-center justify-between border-t border-void/25 px-2.5 font-[590] text-void/60 uppercase", hero ? "py-1.5 text-[10px]" : "py-1 text-[9px]")}>
                   {footer}
                 </div>
               ) : null}

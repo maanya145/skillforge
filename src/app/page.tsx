@@ -86,17 +86,15 @@ export default function LandingPage() {
             <div className="relative pr-10">
               <div
                 aria-hidden
-                className="pointer-events-none absolute top-1/2 left-1/2 -z-10 size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(208,214,224,0.07)_0%,transparent_65%)] lg:size-[700px]"
+                className="pointer-events-none absolute top-1/2 left-1/2 -z-10 size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(208,214,224,0.1)_0%,transparent_65%)] lg:size-[700px]"
               />
               <ConsoleHero />
             </div>
 
             <div className="flex max-w-[760px] flex-col items-center gap-6 text-center">
-              <Badge variant="lime" className="rounded-full px-3 py-1">
+              <Badge variant="tag" className="rounded-full px-3 py-1">
                 <BadgeDot />
-                <span className="text-mist">
-                  Built for campus placement season
-                </span>
+                Built for campus placement season
               </Badge>
 
               <h1 className="text-heading">

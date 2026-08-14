@@ -74,7 +74,7 @@ function BootScreen({ step }: { step: number }) {
 
   return (
     <div className="flex h-[170px] flex-col items-center justify-center gap-3 font-mono lg:h-[200px]">
-      <p className="text-[15px] font-[590] tracking-[0.22em] text-bone uppercase lg:text-[18px]">
+      <p className="text-[15px] font-[590] tracking-[0.22em] text-void uppercase lg:text-[18px]">
         {typed}
         <span aria-hidden className="animate-pulse">
           ▌
@@ -82,13 +82,13 @@ function BootScreen({ step }: { step: number }) {
       </p>
       {step > BOOT_WORD.length + 1 ? (
         <>
-          <p aria-hidden className="text-[13px] tracking-[0.3em] text-bone/80 lg:text-[15px]">
+          <p aria-hidden className="text-[13px] tracking-[0.3em] text-void/80 lg:text-[15px]">
             {"▓".repeat(Math.min(blocks, BOOT_BLOCKS))}
-            <span className="text-bone/25">
+            <span className="text-void/20">
               {"░".repeat(Math.max(0, BOOT_BLOCKS - blocks))}
             </span>
           </p>
-          <p className="text-[10px] tracking-[0.14em] text-bone/50 uppercase">
+          <p className="text-[10px] tracking-[0.14em] text-void/50 uppercase">
             {status}
           </p>
         </>
@@ -277,7 +277,7 @@ export function ConsoleHero({ className }: { className?: string }) {
           : "Crank to move the cursor"
       }
       headerRight={
-        <span className="font-mono text-[11px] tabular text-bone/60">
+        <span className="font-mono text-[11px] tabular text-void/60">
           {mode === "boot" ? "bios" : mode === "menu" ? "boot" : "mentor"}
         </span>
       }
@@ -312,7 +312,7 @@ export function ConsoleHero({ className }: { className?: string }) {
           </button>
         ) : mode === "menu" ? (
           <div className="px-1.5 py-2 text-[14px] lg:px-2 lg:py-2.5 lg:text-[16px]">
-            <p className="px-2 pb-2.5 text-[11px] leading-snug text-bone/60 lg:text-[12px]">
+            <p className="px-2 pb-2.5 text-[11px] leading-snug text-void/60 lg:text-[12px]">
               your resume, measured against a published role bar. no invented
               numbers.
             </p>
@@ -331,7 +331,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                   }}
                   className={cn(
                     "flex w-full items-center gap-2.5 rounded-[2px] px-2 py-2 text-left font-[590] outline-none",
-                    cursor ? "bg-bone text-void" : "text-bone/75 hover:text-bone"
+                    cursor ? "bg-void text-bone" : "text-void/75 hover:text-void"
                   )}
                 >
                   <item.icon aria-hidden className="size-4" strokeWidth={2.25} />
@@ -340,7 +340,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                     <span
                       className={cn(
                         "block truncate text-[10px] font-normal lg:text-[11px]",
-                        cursor ? "text-void/70" : "text-bone/45"
+                        cursor ? "text-bone/70" : "text-void/45"
                       )}
                     >
                       {item.hint}
@@ -367,7 +367,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                   key={i}
                   className={cn(
                     "leading-snug",
-                    m.role === "user" ? "text-bone" : "text-bone/75"
+                    m.role === "user" ? "text-void" : "text-void/75"
                   )}
                 >
                   <span className="font-[590]">
@@ -389,9 +389,9 @@ export function ConsoleHero({ className }: { className?: string }) {
                 e.preventDefault()
                 send()
               }}
-              className="flex items-center gap-2 border-t border-bone/20 px-2.5 py-2"
+              className="flex items-center gap-2 border-t border-void/25 px-2.5 py-2"
             >
-              <span aria-hidden className="font-[590] text-bone/60">
+              <span aria-hidden className="font-[590] text-void/60">
                 ›
               </span>
               <input
@@ -402,7 +402,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                 placeholder={streaming ? "…" : "ask what this is"}
                 aria-label="Ask the mentor about SkillForge"
                 disabled={streaming}
-                className="min-w-0 flex-1 bg-transparent font-[590] text-bone outline-none placeholder:text-bone/40"
+                className="min-w-0 flex-1 bg-transparent font-[590] text-void outline-none placeholder:text-void/40"
               />
             </form>
           </div>

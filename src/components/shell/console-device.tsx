@@ -75,7 +75,7 @@ export function ConsoleDevice({
         text: items[index].label,
       }}
       headerRight={
-        <span className="font-mono text-[10px] tabular text-bone/60">
+        <span className="font-mono text-[10px] tabular text-void/60">
           {index + 1}/{items.length}
         </span>
       }
@@ -102,7 +102,7 @@ export function ConsoleDevice({
                     className={cn(
                       "flex items-center gap-2 rounded-[2px] px-1.5 py-1 font-[590] outline-none",
                       // 1-bit: the cursor row inverts. No tint, no ring.
-                      cursor ? "bg-bone text-void" : "text-bone/75 hover:text-bone"
+                      cursor ? "bg-void text-bone" : "text-void/75 hover:text-void"
                     )}
                   >
                     <item.icon aria-hidden className="size-3" strokeWidth={2.25} />
