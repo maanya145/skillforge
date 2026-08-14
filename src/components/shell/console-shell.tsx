@@ -169,7 +169,7 @@ export function ConsoleShell({
     <div
       className={cn(
         "relative select-none",
-        hero ? "w-[340px] sm:w-[420px]" : "w-[264px]",
+        hero ? "w-[340px] sm:w-[420px] lg:w-[500px]" : "w-[264px]",
         className
       )}
       style={{ perspective: "900px" }}
@@ -199,7 +199,7 @@ export function ConsoleShell({
         <div
           className={cn(
             "relative rounded-[16px]", // check-design-ignore -- moulded corner
-            hero ? "p-6" : "p-4",
+            hero ? "p-6 lg:p-7" : "p-4",
             "bg-[linear-gradient(172deg,#1d1f22_0%,#141517_52%,#0c0d0e_100%)]",
             "shadow-[0_1px_0_rgba(255,255,255,0.09)_inset,0_-2px_0_rgba(0,0,0,0.5)_inset,0_18px_40px_rgba(0,0,0,0.55)]"
           )}

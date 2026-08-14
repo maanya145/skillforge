@@ -86,7 +86,7 @@ export default function LandingPage() {
             <div className="relative pr-10">
               <div
                 aria-hidden
-                className="pointer-events-none absolute top-1/2 left-1/2 -z-10 size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(208,214,224,0.07)_0%,transparent_65%)]"
+                className="pointer-events-none absolute top-1/2 left-1/2 -z-10 size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(208,214,224,0.07)_0%,transparent_65%)] lg:size-[700px]"
               />
               <ConsoleHero />
             </div>
@@ -99,13 +99,11 @@ export default function LandingPage() {
                 </span>
               </Badge>
 
-              <h1 className="text-heading-lg">
-                Measure the gap.
-                <br />
-                Then close it.
+              <h1 className="text-heading">
+                Measure the gap. Then close it.
               </h1>
 
-              <p className="max-w-[60ch] text-body-lg text-mist">
+              <p className="max-w-[56ch] text-base text-mist">
                 SkillForge reads your resume, measures every skill against the
                 role you&rsquo;re actually chasing, and returns the shortest
                 honest path to ready.

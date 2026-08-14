@@ -73,8 +73,8 @@ function BootScreen({ step }: { step: number }) {
         : BOOT_STATUS[0]
 
   return (
-    <div className="flex h-[170px] flex-col items-center justify-center gap-3 font-mono">
-      <p className="text-[15px] font-[590] tracking-[0.22em] text-bone uppercase">
+    <div className="flex h-[170px] flex-col items-center justify-center gap-3 font-mono lg:h-[200px]">
+      <p className="text-[15px] font-[590] tracking-[0.22em] text-bone uppercase lg:text-[18px]">
         {typed}
         <span aria-hidden className="animate-pulse">
           ▌
@@ -82,7 +82,7 @@ function BootScreen({ step }: { step: number }) {
       </p>
       {step > BOOT_WORD.length + 1 ? (
         <>
-          <p aria-hidden className="text-[13px] tracking-[0.3em] text-bone/80">
+          <p aria-hidden className="text-[13px] tracking-[0.3em] text-bone/80 lg:text-[15px]">
             {"▓".repeat(Math.min(blocks, BOOT_BLOCKS))}
             <span className="text-bone/25">
               {"░".repeat(Math.max(0, BOOT_BLOCKS - blocks))}
@@ -311,8 +311,8 @@ export function ConsoleHero({ className }: { className?: string }) {
             <BootScreen step={bootStep} />
           </button>
         ) : mode === "menu" ? (
-          <div className="px-1.5 py-2 text-[14px]">
-            <p className="px-2 pb-2.5 text-[11px] leading-snug text-bone/60">
+          <div className="px-1.5 py-2 text-[14px] lg:px-2 lg:py-2.5 lg:text-[16px]">
+            <p className="px-2 pb-2.5 text-[11px] leading-snug text-bone/60 lg:text-[12px]">
               your resume, measured against a published role bar. no invented
               numbers.
             </p>
@@ -339,7 +339,7 @@ export function ConsoleHero({ className }: { className?: string }) {
                     <span className="block truncate">{item.label}</span>
                     <span
                       className={cn(
-                        "block truncate text-[10px] font-normal",
+                        "block truncate text-[10px] font-normal lg:text-[11px]",
                         cursor ? "text-void/70" : "text-bone/45"
                       )}
                     >
@@ -356,7 +356,7 @@ export function ConsoleHero({ className }: { className?: string }) {
             })}
           </div>
         ) : (
-          <div className="flex h-[230px] flex-col text-[13px]">
+          <div className="flex h-[230px] flex-col text-[13px] lg:h-[270px] lg:text-[14px]">
             <div
               ref={logRef}
               className="min-h-0 flex-1 space-y-2 overflow-y-auto px-2.5 py-2"
