@@ -16,6 +16,7 @@ import {
   Kbd,
 } from "@/components/shell/frame"
 import { AppSidebar, WORKSPACE_NAV } from "@/components/shell/app-sidebar"
+import { ConsoleHero } from "@/components/shell/console-hero"
 
 /**
  * The hero screenshot's sidebar, derived from the real navigation so the
@@ -77,7 +78,7 @@ export default function LandingPage() {
       <main className="flex flex-col gap-24 pb-24">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section className="pt-24">
-          <Container>
+          <Container className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_auto]">
             <div className="flex max-w-[760px] flex-col items-start gap-6">
               <Badge variant="lime" className="rounded-full px-3 py-1">
                 <BadgeDot />
@@ -110,6 +111,13 @@ export default function LandingPage() {
                   <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
+            </div>
+
+            {/* The console: the product demo you can hold. Its boot menu is the
+                same two doors as the CTAs above — upload, or ask the mentor
+                what this is. The crank gutter needs breathing room, hence pr. */}
+            <div className="justify-self-center pr-10 lg:justify-self-end">
+              <ConsoleHero />
             </div>
           </Container>
 
