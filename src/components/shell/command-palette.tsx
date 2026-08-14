@@ -19,6 +19,7 @@ import {
   MessageCircle,
   Settings,
   Target,
+  BookOpen,
   CornerDownLeft,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -53,6 +54,7 @@ const SCREENS: [string, string, string, React.ReactNode][] = [
   ["/app/progress", "Progress", "Readiness trend and study log", <TrendingUp key="g" className="size-4" />],
   ["/app/chat", "Mentor", "Chat grounded in your numbers", <MessageCircle key="c" className="size-4" />],
   ["/app/settings", "Settings", "Role, hours and profile", <Settings key="s" className="size-4" />],
+  ["/benchmarks", "Benchmarks", "The published rubric every level is scored against", <BookOpen key="b" className="size-4" />],
 ]
 
 export function CommandPalette({
@@ -105,7 +107,7 @@ export function CommandPalette({
       ...roles.map((role) => ({
         id: `role-${role.id}`,
         title: `Target ${role.name}`,
-        description: "Re-measure everything against this role — no model call",
+        description: "Re-measure everything against this role — instant, no re-upload",
         category: "Target role" as const,
         icon: <Target className="size-4" />,
         action: () => {
@@ -286,7 +288,7 @@ export function CommandPalette({
               </div>
 
               <div className="flex items-center justify-between border-t border-graphite bg-white/[0.02] px-4 py-2 font-mono text-xs text-ash">
-                <span>↑↓ navigate · enter run</span>
+                <span>↑↓ navigate · enter select</span>
                 <span>SkillForge</span>
               </div>
             </motion.div>

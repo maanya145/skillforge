@@ -82,3 +82,47 @@ export function AppSidebar({
     </nav>
   )
 }
+
+
+/**
+ * Horizontally scrolling tab strip for narrow viewports, where the sidebar is
+ * hidden. Same destinations, same active-state vocabulary.
+ */
+export function MobileNav({
+  items = WORKSPACE_NAV,
+  current,
+  className,
+}: {
+  items?: SidebarItem[]
+  current: string
+  className?: string
+}) {
+  return (
+    <nav
+      aria-label="Workspace"
+      className={cn(
+        "flex gap-1 overflow-x-auto border-b border-graphite px-2 py-2",
+        className
+      )}
+    >
+      {items.map((item) => {
+        const active = current === item.href || current.startsWith(item.href + "/")
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1 text-xs whitespace-nowrap transition-colors",
+              active
+                ? "bg-white/[0.08] text-paper"
+                : "text-fog hover:text-mist"
+            )}
+          >
+            {item.label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}

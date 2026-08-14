@@ -28,7 +28,8 @@ export type BenchmarkSeed = {
 }
 
 /** Cited on the skill map so the bar is attributable, not asserted. */
-export const BENCHMARK_SOURCE = "340 campus job descriptions, 2026 hiring cycle"
+export const BENCHMARK_SOURCE =
+  "Hand-authored from public role descriptions, 2026 campus cycle"
 export const BENCHMARK_VERSION = "2026.1"
 
 const backend: BenchmarkSeed[] = [

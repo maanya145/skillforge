@@ -83,8 +83,8 @@ export function RoleSwitcher({ roles }: { roles: RoleRow[] }) {
         </button>
       ))}
       <p className="mt-2 border-t border-graphite pt-2 text-xs text-ash">
-        Same evidence, five different bars. Switching re-measures everything —
-        instantly, because it&rsquo;s arithmetic, not another model call.
+        Same evidence, five different bars. Switching re-measures everything
+        instantly — it&rsquo;s arithmetic, not another analysis.
       </p>
     </div>
   )

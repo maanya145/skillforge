@@ -21,6 +21,8 @@ const VERDICT: Record<
   skip: { label: "Skip", variant: "default" },
 }
 
+export const metadata = { title: "Practice · SkillForge" }
+
 export default async function PracticePage() {
   await requireAuth()
   const student = await ensureStudent()
@@ -32,7 +34,9 @@ export default async function PracticePage() {
       <SectionHead eyebrow="Step 04" title="Practice">
         Every recommendation names the gap it closes and what it&rsquo;s worth.
         Nothing is here because it&rsquo;s popular — the scores are weighted gap
-        points, and most of the certification list says don&rsquo;t bother.
+        points, and most of the certification list says don&rsquo;t bother. The
+        questions are archetypes drawn from publicly shared interview
+        experiences, not transcripts.
       </SectionHead>
 
       <WorkspaceFrame
@@ -83,7 +87,7 @@ export default async function PracticePage() {
                       {p.closesTrackIds.length ? (
                         <Badge variant="tag">
                           <BadgeDot />
-                          closes {p.closesTrackIds.length} gap
+                          Closes {p.closesTrackIds.length} gap
                           {p.closesTrackIds.length === 1 ? "" : "s"}
                         </Badge>
                       ) : null}
@@ -95,7 +99,7 @@ export default async function PracticePage() {
 
             <div className="flex flex-col gap-4">
               <div>
-                <AppHeading aside="from real rounds">
+                <AppHeading aside="patterns, not transcripts">
                   Interview drill
                 </AppHeading>
                 <QuestionList

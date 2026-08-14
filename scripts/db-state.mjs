@@ -6,11 +6,11 @@
  * Faster than opening Drizzle Studio when you just want to know whether a
  * migration landed or a seed ran.
  */
-import { Pool } from "pg"
+import { neon } from "@neondatabase/serverless"
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const sql = neon(process.env.DATABASE_URL)
 
-const { rows: schemas } = await pool.query(`
+const schemas = await sql.query(`
   select table_schema, count(*)::int as tables
   from information_schema.tables
   where table_schema in ('public', 'mastra')
@@ -20,7 +20,6 @@ const { rows: schemas } = await pool.query(`
 
 if (schemas.length === 0) {
   console.log("No tables yet. Run `npm run db:migrate`.")
-  await pool.end()
   process.exit(0)
 }
 
@@ -45,7 +44,7 @@ const INTERESTING = [
   "readiness_snapshots",
 ]
 
-const { rows: present } = await pool.query(
+const present = await sql.query(
   `select table_name from information_schema.tables where table_schema = 'public'`
 )
 const have = new Set(present.map((r) => r.table_name))
@@ -53,9 +52,9 @@ const have = new Set(present.map((r) => r.table_name))
 console.log()
 for (const table of INTERESTING) {
   if (!have.has(table)) continue
-  const { rows } = await pool.query(`select count(*)::int as n from "${table}"`)
+  const rows = await sql.query(`select count(*)::int as n from "${table}"`)
   const n = rows[0].n
   console.log(`  ${table.padEnd(22)} ${String(n).padStart(6)}${n === 0 ? "  (empty)" : ""}`)
 }
 
-await pool.end()
+

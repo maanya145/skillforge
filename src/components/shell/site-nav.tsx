@@ -8,6 +8,7 @@ const LINKS = [
   { href: "#how", label: "How it works" },
   { href: "#measure", label: "Skill map" },
   { href: "#plan", label: "Roadmap" },
+  { href: "/benchmarks", label: "Benchmarks" },
   { href: "#colleges", label: "For colleges" },
 ]
 

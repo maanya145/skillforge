@@ -17,8 +17,15 @@ import {
 } from "@/components/viz/charts"
 import { StudyForm } from "./study-form"
 
-/** Median offer threshold at the target companies — the dashed line. */
-const TARGET = 78
+/**
+ * The dashed line on the trend chart.
+ *
+ * Deliberately framed as a goal the product sets, not a market statistic —
+ * "the median offer threshold" would be a number nobody measured.
+ */
+const TARGET = 75
+
+export const metadata = { title: "Progress · SkillForge" }
 
 export default async function ProgressPage() {
   await requireAuth()
@@ -69,7 +76,7 @@ export default async function ProgressPage() {
       tools={
         <Badge variant={map.readiness >= TARGET ? "ok" : "tag"}>
           <BadgeDot />
-          {map.readiness >= TARGET ? "At threshold" : `Target ${TARGET}`}
+          {map.readiness >= TARGET ? "Target met" : `Target ${TARGET}`}
         </Badge>
       }
     >
@@ -85,8 +92,9 @@ export default async function ProgressPage() {
               ? ` · was ${snapshots[0].readiness} at the start`
               : ""}
           </span>
-          <p className="mt-2 max-w-[24ch] text-xs text-fog">
-            {TARGET} is the median offer threshold at your target companies.
+          <p className="mt-2 max-w-[26ch] text-xs text-fog">
+            {TARGET} is the goal SkillForge sets: every blocking gap closed and
+            the rest within reach.
           </p>
         </SubCard>
 

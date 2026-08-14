@@ -6,8 +6,10 @@ import { WorkspaceFrame } from "@/components/shell/workspace"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { ToolPill } from "@/components/shell/frame"
 
-import { IntakeClient } from "./intake-client"
+import { IntakeClient, type RunState } from "./intake-client"
 import { IntakeResults } from "./intake-results"
+
+export const metadata = { title: "Intake · SkillForge" }
 
 export default async function IntakePage() {
   await requireAuth()
@@ -18,6 +20,23 @@ export default async function IntakePage() {
     getActiveRun(student.id),
     getLatestRun(student.id),
   ])
+
+  // Hand an in-flight run to the client so a refresh, or a walk to another
+  // screen and back, rejoins the analysis instead of showing an idle form.
+  const resumableRun: RunState | null =
+    lastRun &&
+    (lastRun.status === "queued" ||
+      lastRun.status === "running" ||
+      (lastRun.status === "failed" &&
+        Date.now() - lastRun.startedAt.getTime() < 10 * 60 * 1000))
+      ? {
+          id: lastRun.id,
+          status: lastRun.status,
+          currentStep: lastRun.currentStep,
+          progress: lastRun.progress,
+          error: lastRun.error,
+        }
+      : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -34,7 +53,7 @@ export default async function IntakePage() {
         tools={
           <>
             <ToolPill className="hidden sm:inline-flex">
-              {student.weeklyHours} hrs / week
+              {student.weeklyHours} hrs/week
             </ToolPill>
             {lastRun?.status === "succeeded" ? (
               <Badge variant="ok">
@@ -49,6 +68,7 @@ export default async function IntakePage() {
           <IntakeClient
             roles={roles.map((r) => ({ id: r.id, name: r.name }))}
             currentRoleId={student.targetRoleId}
+            initialRun={resumableRun}
           />
 
           <div className="flex flex-col gap-3">
@@ -60,8 +80,8 @@ export default async function IntakePage() {
                   number, which is what makes a flagged sentence citable.
                 </Step>
                 <Step n="02">
-                  One model call reports what the resume demonstrates: counts,
-                  booleans and locations. It is never asked for a score.
+                  The model reports what your resume demonstrates: counts,
+                  yes/no facts and locations. It is never asked for a score.
                 </Step>
                 <Step n="03">
                   Quotes are checked against the source. Anything that
@@ -75,10 +95,12 @@ export default async function IntakePage() {
             </div>
 
             <div className="rounded-md bg-white/[0.02] p-4 shadow-subtle">
-              <span className="t-micro">Not supported yet</span>
+              <span className="t-micro">Scanned resume?</span>
               <p className="mt-2 text-xs text-fog">
-                Scanned resumes and image exports have no text layer to read.
-                DOCX is out of scope — export to PDF first.
+                Scans and image exports have no text to read. Switch to{" "}
+                <strong className="font-[510] text-mist">Paste the text</strong>{" "}
+                and the analysis works exactly the same — page and line
+                citations included.
               </p>
             </div>
           </div>

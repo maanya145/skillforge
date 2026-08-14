@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest"
 import { readFile } from "node:fs/promises"
 
-import { extractResume, numberLines, verifyQuote } from "./extract"
+import {
+  extractResume,
+  numberLines,
+  pseudoPages,
+  verifyQuote,
+} from "./extract"
 
 const PAGES = [
   "AARAV MENON\nB.Tech CSE, VIT Vellore, 2026\n\nEXPERIENCE\nZeta — Backend intern\nImproved performance significantly.\nFamiliar with Docker",
@@ -67,6 +72,49 @@ describe("verifyQuote — the anti-hallucination guard", () => {
 
   it("rejects an empty quote", () => {
     expect(verifyQuote(PAGES, 1, 1, "   ")).toBe(false)
+  })
+})
+
+/**
+ * Pasted text and OCR output both arrive with no page structure. Chunking them
+ * has to keep citations verifiable, which means the line count must survive.
+ */
+describe("pseudoPages", () => {
+  const lines = (n: number) =>
+    Array.from({ length: n }, (_, i) => `line ${i + 1}`).join("\n")
+
+  it("chunks at the page boundary", () => {
+    expect(pseudoPages(lines(60))).toHaveLength(1)
+    expect(pseudoPages(lines(61))).toHaveLength(2)
+    expect(pseudoPages(lines(180))).toHaveLength(3)
+  })
+
+  it("preserves every line, in order, across the split", () => {
+    const pages = pseudoPages(lines(125))
+    expect(pages.join("\n").split("\n")).toHaveLength(125)
+    expect(pages[0].split("\n")[0]).toBe("line 1")
+    expect(pages[1].split("\n")[0]).toBe("line 61")
+    expect(pages[2].split("\n")[0]).toBe("line 121")
+  })
+
+  it("keeps citations checkable against the chunked result", () => {
+    const pages = pseudoPages(`${lines(60)}\nFamiliar with Docker`)
+    // Line 61 of the source is line 1 of the second pseudo-page.
+    expect(verifyQuote(pages, 2, 1, "Familiar with Docker")).toBe(true)
+    expect(verifyQuote(pages, 1, 1, "Familiar with Docker")).toBe(false)
+  })
+
+  it("normalises without shifting line indices", () => {
+    // A blank line and a ligature on either side of the quoted line: neither
+    // may move it, or every citation below would be off by one.
+    const pages = pseudoPages("header\n\nveriﬁed the ﬂow\ntail")
+    expect(pages[0].split("\n")).toHaveLength(4)
+    expect(verifyQuote(pages, 1, 3, "verified the flow")).toBe(true)
+  })
+
+  it("handles empty and single-line input without throwing", () => {
+    expect(pseudoPages("")).toEqual([""])
+    expect(pseudoPages("just one line")).toEqual(["just one line"])
   })
 })
 

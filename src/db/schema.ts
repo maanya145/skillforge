@@ -167,13 +167,19 @@ export const resumes = pgTable(
     rawText: text("raw_text").notNull(),
     /** Per page. This is what makes "p.1 L7" a citation and not decoration. */
     pagesText: jsonb("pages_text").$type<string[]>().notNull(),
+    /** sha256 of the uploaded bytes — lets an identical re-upload reuse a
+     *  prior extraction instead of paying for the model again. */
+    contentHash: text("content_hash"),
     parseMs: integer("parse_ms").notNull(),
     sectionsFound: integer("sections_found").notNull().default(0),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("resumes_student_idx").on(t.studentId)]
+  (t) => [
+    index("resumes_student_idx").on(t.studentId),
+    index("resumes_hash_idx").on(t.studentId, t.contentHash),
+  ]
 )
 
 export const analysisRuns = pgTable(
@@ -512,12 +518,80 @@ export const chatThreads = pgTable(
     studentId: uuid("student_id")
       .notNull()
       .references(() => students.id, { onDelete: "cascade" }),
-    /** Mastra owns the messages; this row just links them to a student */
-    mastraThreadId: text("mastra_thread_id").notNull(),
+    /** First user message, truncated — computed in TypeScript, no model call */
     title: text("title"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
-  (t) => [uniqueIndex("threads_mastra_uidx").on(t.mastraThreadId)]
+  (t) => [index("threads_student_idx").on(t.studentId, t.updatedAt)]
+)
+
+/**
+ * Chat transcript, owned by the app rather than by Mastra's memory store.
+ *
+ * Mastra's PostgresStore was removed after its pooled driver proved unusable
+ * on IPv6-degraded networks (see src/db/client.ts); persisting messages
+ * through the same HTTP driver everything else uses keeps one connection
+ * path and one failure mode.
+ */
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    role: text("role").notNull(), // 'user' | 'assistant'
+    content: text("content").notNull(),
+    /** Which tools ran for this answer — rendered as provenance in the UI */
+    toolsUsed: jsonb("tools_used").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("messages_thread_idx").on(t.threadId, t.createdAt)]
+)
+
+// ─── Sharing ─────────────────────────────────────────────────────────────────
+
+/**
+ * A read-only, unguessable link to one analysis run.
+ *
+ * The token is the whole access control model, so it is 128 bits of CSPRNG
+ * randomness — not a slug, not the run's uuid. A share points at a *run* rather
+ * than a student, which means re-analysing or switching roles never silently
+ * changes what a recruiter already opened: the old link keeps showing the
+ * numbers that were true when it was sent.
+ *
+ * `revokedAt` rather than a delete, so "I un-shared it" stays auditable and the
+ * view counter survives.
+ */
+export const reportShares = pgTable(
+  "report_shares",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    token: text("token").notNull(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => analysisRuns.id, { onDelete: "cascade" }),
+    /** Opt-in: off means the report shows the role and numbers but no name. */
+    showName: boolean("show_name").notNull().default(true),
+    viewCount: integer("view_count").notNull().default(0),
+    lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("shares_token_uidx").on(t.token),
+    index("shares_student_idx").on(t.studentId, t.createdAt),
+  ]
 )

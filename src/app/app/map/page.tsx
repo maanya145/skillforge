@@ -11,9 +11,13 @@ import { WorkspaceFrame, EmptyState } from "@/components/shell/workspace"
 import { AppHeading, ToolPill, SubCard } from "@/components/shell/frame"
 import { GapGauge, GaugeLegend } from "@/components/viz/gap-gauge"
 import { getExtractCache, compareRoles } from "@/lib/replan"
+import { getShareForRun } from "@/lib/shares"
 import { eq } from "drizzle-orm"
 
 import { RoleSwitcher } from "./role-switcher"
+import { SharePanel } from "./share-panel"
+
+export const metadata = { title: "Skill map · SkillForge" }
 
 export default async function SkillMapPage() {
   await requireAuth()
@@ -60,6 +64,8 @@ export default async function SkillMapPage() {
   const comparison = cache
     ? await compareRoles(cache, map.roleId, student.weeklyHours)
     : null
+
+  const share = await getShareForRun(student.id, map.runId)
 
   return (
     <Shell
@@ -126,15 +132,35 @@ export default async function SkillMapPage() {
           ) : null}
 
           <SubCard>
+            <span className="t-micro">Share this report</span>
+            <div className="mt-2">
+              <SharePanel
+                initialToken={share?.token ?? null}
+                initialShowName={share?.showName ?? true}
+                views={share?.viewCount ?? 0}
+              />
+            </div>
+          </SubCard>
+
+          <SubCard>
             <span className="t-micro">How this was measured</span>
             <p className="mt-2 text-xs text-fog">
               Every level here was computed from evidence found on your resume,
               scored against a published benchmark. The model reported what it
               found; it did not choose any of these numbers.
             </p>
+            <p className="mt-2 text-xs text-fog">
+              The benchmark is public —{" "}
+              <Link
+                href={`/benchmarks?role=${map.roleId}`}
+                className="text-mist underline decoration-graphite underline-offset-2 transition-colors hover:decoration-mist"
+              >
+                read the rubric it was scored against
+              </Link>
+              .
+            </p>
             <p className="mt-2 font-mono text-xs text-ash">
-              run {map.runId.slice(0, 8)} ·{" "}
-              {map.computedAt.toISOString().slice(0, 10)}
+              analysed {map.computedAt.toISOString().slice(0, 10)}
             </p>
           </SubCard>
 

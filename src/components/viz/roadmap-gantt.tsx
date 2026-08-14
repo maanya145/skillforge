@@ -35,10 +35,13 @@ const BAR: Record<GanttItem["kind"], string> = {
 export function RoadmapGantt({
   items,
   totalWeeks,
+  currentWeek,
   className,
 }: {
   items: GanttItem[]
   totalWeeks: number
+  /** 1-based; marks "you are here" on the timeline. */
+  currentWeek?: number
   className?: string
 }) {
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1)
@@ -58,7 +61,14 @@ export function RoadmapGantt({
           {weeks.map((w) => (
             <span
               key={w}
-              className="py-2 text-center font-mono text-xs tabular text-ash"
+              className={cn(
+                "py-2 text-center font-mono text-xs tabular",
+                w === currentWeek
+                  ? "font-[510] text-paper"
+                  : w < (currentWeek ?? 0)
+                    ? "text-smoke"
+                    : "text-ash"
+              )}
             >
               {w}
             </span>
@@ -84,12 +94,21 @@ export function RoadmapGantt({
                     {row[0].label}
                   </span>
                   <div
-                    className="col-[2/-1] grid h-full items-center"
+                    className="relative col-[2/-1] grid h-full items-center"
                     style={{
                       gridTemplateColumns: `repeat(${totalWeeks}, 1fr)`,
                       ...ticks,
                     }}
                   >
+                    {currentWeek && currentWeek <= totalWeeks ? (
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-y-0 z-10 w-px bg-acid-lime/40"
+                        style={{
+                          left: `calc(${((currentWeek - 1) / totalWeeks) * 100}% - 0.5px)`,
+                        }}
+                      />
+                    ) : null}
                     {row.map((item) => (
                       <span
                         key={item.id}
@@ -118,6 +137,9 @@ export function RoadmapGantt({
           <Key swatch="bg-pulse-green/40">Portfolio build</Key>
           <Key swatch="hatch bg-white/[0.06] shadow-subtle">Recurring drill</Key>
           <Key swatch="bg-coral-red/45">Checkpoint</Key>
+          {currentWeek ? (
+            <Key swatch="w-px bg-acid-lime/60">This week</Key>
+          ) : null}
         </div>
       </div>
     </div>
@@ -144,7 +166,7 @@ function Key({
 }) {
   return (
     <span className="flex items-center gap-2 text-xs text-ash">
-      <i className={cn("block h-2 w-[18px] rounded-sm", swatch)} />
+      <i className={cn("block h-2 w-[18px] shrink-0 rounded-sm", swatch)} />
       {children}
     </span>
   )

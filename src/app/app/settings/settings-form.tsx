@@ -141,7 +141,7 @@ export function SettingsForm(props: Props) {
               <SelectContent>
                 {[5, 9, 14, 20].map((h) => (
                   <SelectItem key={h} value={String(h)}>
-                    {h} hours / week
+                    {h} hrs/week
                   </SelectItem>
                 ))}
               </SelectContent>

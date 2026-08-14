@@ -13,10 +13,26 @@ import { RoadmapGantt } from "@/components/viz/roadmap-gantt"
 import { DoneList } from "./done-list"
 import { HoursControl } from "./hours-control"
 
+export const metadata = { title: "Roadmap · SkillForge" }
+
 export default async function RoadmapPage() {
   await requireAuth()
   const student = await ensureStudent()
   const roadmap = await getRoadmap(student.id)
+
+  // Which week the student is actually in, from the plan's start date.
+  const currentWeek = roadmap
+    ? Math.min(
+        roadmap.totalWeeks,
+        Math.max(
+          1,
+          Math.floor(
+            (Date.now() - new Date(roadmap.startDate).getTime()) /
+              (7 * 24 * 60 * 60 * 1000)
+          ) + 1
+        )
+      )
+    : undefined
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,7 +52,7 @@ export default async function RoadmapPage() {
               <HoursControl current={roadmap.weeklyHours} />
               <Badge variant="ok">
                 <BadgeDot />
-                {roadmap.totalWeeks} weeks
+                {roadmap.totalWeeks} wks
               </Badge>
             </>
           ) : undefined
@@ -59,6 +75,7 @@ export default async function RoadmapPage() {
           <div className="flex flex-col gap-4">
             <RoadmapGantt
               totalWeeks={roadmap.totalWeeks}
+              currentWeek={currentWeek}
               items={roadmap.items.map((i) => ({
                 id: i.id,
                 lane: i.lane,

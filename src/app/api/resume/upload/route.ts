@@ -1,83 +1,240 @@
+import { createHash } from "node:crypto"
 import { after, type NextRequest } from "next/server"
-import { eq } from "drizzle-orm"
+import { and, desc, eq, isNotNull } from "drizzle-orm"
 
 import { db, schema } from "@/db"
 import { ensureStudent } from "@/lib/students"
-import { extractResume, ResumeParseError } from "@/lib/pdf/extract"
+import {
+  extractResume,
+  pseudoPages,
+  ResumeParseError,
+  type ExtractedResume,
+} from "@/lib/pdf/extract"
+import { ocrResume } from "@/lib/pdf/firecrawl"
+import { replanRole } from "@/lib/replan"
 import { mastra } from "@/mastra"
 
-/** unpdf and pg both need Node APIs. */
 export const runtime = "nodejs"
 /**
  * The response returns in ~2s, but the analysis continues via `after()` and
- * the free-tier model spends ~160s reasoning. The function must stay alive
- * that long or the run dies mid-flight with its status stuck on "running" —
- * so this is sized to the after() work, not the response.
+ * the free-tier model spends ~160s reasoning. Sized to the after() work.
  */
 export const maxDuration = 300
 
-const MAX_BYTES = 8 * 1024 * 1024
+/**
+ * Vercel caps a serverless request body at 4.5MB, so a larger file dies at the
+ * platform with a non-JSON 413 before any of this code runs. Advertising 8MB
+ * would be a promise the deployment cannot keep.
+ */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+/**
+ * A run older than this with no terminal status is presumed dead.
+ *
+ * Deliberately just above `maxDuration`: on Hobby the platform kills the
+ * function at 300s, and the free model tier has been observed taking far
+ * longer than that end to end. When the function dies mid-run nothing can mark
+ * the row failed, so the reaper is the only thing that will — and waiting ten
+ * minutes to say so is its own bad experience.
+ */
+export const RUN_TIMEOUT_MS = 6 * 60 * 1000
+
+/** Minimum characters of pasted text worth analysing. */
+const MIN_PASTE_CHARS = 200
+
+/** Model and infrastructure failures, translated for a student. */
+function friendlyFailure(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err ?? "")
+  if (/429|rate.?limit|FreeUsageLimit/i.test(raw)) {
+    return "The analysis service is rate-limited right now. Wait a minute and try again."
+  }
+  if (/no structured output|schema|validation/i.test(raw)) {
+    return "The analysis came back unreadable. Try again — this usually clears on a second run."
+  }
+  if (/timeout|ETIMEDOUT|fetch failed|ECONN/i.test(raw)) {
+    return "The analysis lost its connection partway through. Try again."
+  }
+  return "The analysis failed. Try again."
+}
 
 export async function POST(request: NextRequest) {
-  // Resource-based auth: Clerk deprecated middleware path matching, so every
-  // handler checks for itself rather than trusting the proxy.
   const student = await ensureStudent()
 
-  const form = await request.formData().catch(() => null)
-  const file = form?.get("resume")
+  // ── One analysis at a time ────────────────────────────────────────────────
+  // Concurrent runs race in persistStep — whichever finishes last wins the
+  // active roadmap — so a second submission joins the first instead.
+  const [inFlight] = await db
+    .select({
+      id: schema.analysisRuns.id,
+      status: schema.analysisRuns.status,
+      startedAt: schema.analysisRuns.startedAt,
+    })
+    .from(schema.analysisRuns)
+    .where(eq(schema.analysisRuns.studentId, student.id))
+    .orderBy(desc(schema.analysisRuns.startedAt))
+    .limit(1)
 
-  if (!(file instanceof File)) {
+  if (
+    inFlight &&
+    (inFlight.status === "queued" || inFlight.status === "running") &&
+    Date.now() - inFlight.startedAt.getTime() < RUN_TIMEOUT_MS
+  ) {
     return Response.json(
-      { error: "Attach a PDF as the `resume` field." },
+      {
+        error: "An analysis is already running.",
+        code: "already_running",
+        runId: inFlight.id,
+      },
+      { status: 409 }
+    )
+  }
+
+  const form = await request.formData().catch(() => null)
+  if (!form) {
+    return Response.json(
+      { error: "That upload was malformed. Try again." },
       { status: 400 }
     )
   }
-  if (file.type && file.type !== "application/pdf") {
-    return Response.json(
-      { error: "That's not a PDF. Export your resume as PDF and try again." },
-      { status: 415 }
-    )
-  }
-  if (file.size > MAX_BYTES) {
-    return Response.json(
-      { error: "That file is over 8 MB. Most resumes are under 500 KB." },
-      { status: 413 }
-    )
-  }
 
-  let parsed
-  try {
-    parsed = await extractResume(new Uint8Array(await file.arrayBuffer()))
-  } catch (err) {
-    if (err instanceof ResumeParseError) {
-      // A scan has no text layer. Say so specifically and point at the way out
-      // rather than returning a generic failure.
-      return Response.json(
-        { error: err.message, kind: err.kind },
-        { status: 422 }
-      )
-    }
-    throw err
-  }
-
-  const roleId = (form?.get("roleId") as string) || student.targetRoleId
-  if (!roleId) {
+  // ── Validate the target role before writing anything ──────────────────────
+  const requestedRole = (form.get("roleId") as string) || student.targetRoleId
+  if (!requestedRole) {
     return Response.json({ error: "Pick a target role first." }, { status: 400 })
   }
+  const [role] = await db
+    .select({ id: schema.roles.id })
+    .from(schema.roles)
+    .where(eq(schema.roles.id, requestedRole))
+  if (!role) {
+    return Response.json(
+      { error: "That role isn't available — pick one from the list." },
+      { status: 400 }
+    )
+  }
+  const roleId = role.id
+
+  // ── Two intake paths: a PDF, or pasted text ───────────────────────────────
+  const pasted = (form.get("text") as string | null)?.trim() ?? null
+  const file = form.get("resume")
+
+  let fileName: string
+  let fileSize: number
+  let pageCount: number
+  let pagesText: string[]
+  let rawText: string
+  let parseMs: number
+  let contentHash: string
+  let source: ExtractedResume["source"]
+
+  if (pasted) {
+    if (pasted.length < MIN_PASTE_CHARS) {
+      return Response.json(
+        {
+          error: `That's only ${pasted.length} characters — paste the whole resume so there's something to measure.`,
+        },
+        { status: 400 }
+      )
+    }
+    const started = performance.now()
+    pagesText = pseudoPages(pasted)
+    rawText = pagesText.join("\n\n")
+    fileName = "Pasted resume"
+    fileSize = pasted.length
+    pageCount = pagesText.length
+    parseMs = Math.round(performance.now() - started)
+    contentHash = createHash("sha256").update(rawText).digest("hex")
+    source = "pasted"
+  } else {
+    if (!(file instanceof File)) {
+      return Response.json(
+        { error: "Attach a PDF, or paste your resume text." },
+        { status: 400 }
+      )
+    }
+    const looksPdf =
+      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
+    if (!looksPdf) {
+      return Response.json(
+        { error: "That's not a PDF. Export your resume as PDF and try again." },
+        { status: 415 }
+      )
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return Response.json(
+        {
+          error: `That file is over ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB. Most resumes are under 500 KB.`,
+        },
+        { status: 413 }
+      )
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    contentHash = createHash("sha256").update(bytes).digest("hex")
+
+    let parsed: ExtractedResume | null = null
+    try {
+      parsed = await extractResume(bytes)
+    } catch (err) {
+      if (!(err instanceof ResumeParseError)) throw err
+
+      // No text layer means a scan, a photo or outlined glyphs — precisely the
+      // case OCR exists for. Every other parse failure (encrypted, corrupt) is
+      // not something OCR can rescue, so it goes straight back to the student.
+      if (err.kind === "no-text-layer") {
+        parsed = await ocrResume(bytes, file.name)
+      }
+      if (!parsed) {
+        return Response.json(
+          { error: err.message, kind: err.kind },
+          { status: 422 }
+        )
+      }
+    }
+    pagesText = parsed.pagesText
+    rawText = parsed.rawText
+    pageCount = parsed.pageCount
+    parseMs = parsed.parseMs
+    source = parsed.source
+    fileName = file.name || "resume.pdf"
+    fileSize = file.size
+  }
+
+  // ── Identical bytes already analysed? Skip the model entirely ─────────────
+  // The extraction is role-independent, so a re-upload of the same resume is
+  // pure arithmetic — the same insight that makes role switching instant.
+  const [priorRun] = await db
+    .select({
+      extractCache: schema.analysisRuns.extractCache,
+    })
+    .from(schema.analysisRuns)
+    .innerJoin(schema.resumes, eq(schema.resumes.id, schema.analysisRuns.resumeId))
+    .where(
+      and(
+        eq(schema.resumes.studentId, student.id),
+        eq(schema.resumes.contentHash, contentHash),
+        eq(schema.analysisRuns.status, "succeeded"),
+        isNotNull(schema.analysisRuns.extractCache)
+      )
+    )
+    .orderBy(desc(schema.analysisRuns.startedAt))
+    .limit(1)
 
   const [resume] = await db
     .insert(schema.resumes)
     .values({
       studentId: student.id,
-      fileName: file.name || "resume.pdf",
-      fileSize: file.size,
-      pageCount: parsed.pageCount,
-      rawText: parsed.rawText,
-      pagesText: parsed.pagesText,
-      parseMs: parsed.parseMs,
-      sectionsFound: parsed.pagesText.length,
+      fileName,
+      fileSize,
+      pageCount,
+      rawText,
+      pagesText,
+      contentHash,
+      parseMs,
+      sectionsFound: pagesText.length,
     })
     .returning()
+
+  const reusable = priorRun?.extractCache ?? null
 
   const [run] = await db
     .insert(schema.analysisRuns)
@@ -85,14 +242,46 @@ export async function POST(request: NextRequest) {
       studentId: student.id,
       resumeId: resume.id,
       roleId,
-      status: "queued",
+      status: reusable ? "running" : "queued",
+      extractCache: reusable,
+      progress: reusable
+        ? [
+            {
+              key: "cached",
+              label: "Recognised this resume",
+              value: "reusing the previous reading",
+            },
+          ]
+        : [],
     })
     .returning()
 
-  // The analysis makes a model call and takes tens of seconds on the free
-  // tier, so the response returns immediately and the client polls
-  // /api/analysis/[runId]. `after()` keeps the work alive past the response —
-  // without it a serverless function freezes the moment it replies.
+  if (reusable) {
+    // Deterministic path: score, rank and schedule from the cached evidence.
+    // Sub-second, so it is awaited rather than deferred.
+    try {
+      await replanRole({
+        studentId: student.id,
+        runId: run.id,
+        roleId,
+        weeklyHours: student.weeklyHours,
+      })
+      await db
+        .update(schema.analysisRuns)
+        .set({ status: "succeeded", currentStep: "persist", finishedAt: new Date() })
+        .where(eq(schema.analysisRuns.id, run.id))
+      return Response.json({ runId: run.id, resumeId: resume.id, cached: true })
+    } catch (err) {
+      console.error("[upload] cached replan failed:", err)
+      // Fall through to a full analysis rather than failing the upload.
+      await db
+        .update(schema.analysisRuns)
+        .set({ status: "queued", extractCache: null, progress: [] })
+        .where(eq(schema.analysisRuns.id, run.id))
+    }
+  }
+
+  // The analysis outlives this response; `after()` keeps the function alive.
   after(async () => {
     try {
       const workflowRun = await mastra
@@ -117,22 +306,19 @@ export async function POST(request: NextRequest) {
       if (result.status !== "success") {
         throw new Error(
           result.status === "failed"
-            ? String(result.error ?? "The analysis failed.")
-            : `Analysis ended as "${result.status}".`
+            ? String(result.error ?? "failed")
+            : `ended as ${result.status}`
         )
       }
     } catch (err) {
-      // A failed run must look failed. The free model tier rate-limits in
-      // bursts, and a run stuck on "running" forever is worse than an honest
-      // error the student can retry.
+      // Raw internal messages ("Run `npm run db:seed`") must never reach a
+      // student; log the cause, store something actionable.
+      console.error("[upload] analysis failed:", err)
       await db
         .update(schema.analysisRuns)
         .set({
           status: "failed",
-          error:
-            err instanceof Error
-              ? err.message.slice(0, 500)
-              : "The analysis failed.",
+          error: friendlyFailure(err),
           finishedAt: new Date(),
         })
         .where(eq(schema.analysisRuns.id, run.id))
@@ -142,7 +328,11 @@ export async function POST(request: NextRequest) {
   return Response.json({
     runId: run.id,
     resumeId: resume.id,
-    pageCount: parsed.pageCount,
-    parseMs: parsed.parseMs,
+    pageCount,
+    parseMs,
+    cached: false,
+    // The student should know their scan went through OCR — it is why the
+    // citations below will not line up with the pages they can see.
+    ocr: source === "ocr",
   })
 }

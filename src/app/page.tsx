@@ -24,13 +24,12 @@ import {
   SAMPLE_TOTAL_TRACKS,
 } from "@/content/landing-sample"
 
-const COLLEGES = [
-  "VIT Vellore",
-  "NIT Trichy",
-  "BITS Pilani",
-  "IIIT Hyderabad",
-  "Manipal",
-  "PES University",
+/** What the benchmark actually covers — checkable, unlike a logo strip. */
+const COVERAGE: [string, string][] = [
+  ["5", "target roles"],
+  ["12", "skill tracks"],
+  ["60", "benchmarked requirements"],
+  ["4", "rungs per rubric"],
 ]
 
 const HOW = [
@@ -65,7 +64,7 @@ export default function LandingPage() {
               <Badge variant="lime" className="rounded-full px-3 py-1">
                 <BadgeDot />
                 <span className="text-mist">
-                  Campus placements 2026 — 14 weeks out
+                  Built for campus placement season
                 </span>
               </Badge>
 
@@ -83,7 +82,7 @@ export default function LandingPage() {
 
               <div className="flex flex-wrap items-center gap-4">
                 <Button variant="lime" asChild>
-                  <Link href="/sign-up">Analyze my resume</Link>
+                  <Link href="/sign-up">Analyse your resume</Link>
                 </Button>
                 <Link
                   href="#measure"
@@ -113,10 +112,10 @@ export default function LandingPage() {
                 </Crumb>
                 <div className="flex items-center gap-2">
                   <ToolPill className="hidden sm:inline-flex">
-                    340 job descriptions
+                    Backend benchmark 2026.1
                   </ToolPill>
                   <ToolPill className="hidden lg:inline-flex">
-                    Updated 13 Aug
+                    Sample report
                   </ToolPill>
                   <Kbd>⌘K</Kbd>
                 </div>
@@ -129,7 +128,7 @@ export default function LandingPage() {
                   items={[
                     { href: "/app/intake", label: "Intake", count: "3" },
                     { href: "/app/map", label: "Skill map", count: "12" },
-                    { href: "/app/roadmap", label: "Roadmap", count: "14w" },
+                    { href: "/app/roadmap", label: "Roadmap", count: "14 wks" },
                     { href: "/app/practice", label: "Practice", count: "9" },
                     { href: "/app/progress", label: "Progress", count: "71" },
                   ]}
@@ -158,19 +157,19 @@ export default function LandingPage() {
           </Container>
         </section>
 
-        {/* ── Colleges ─────────────────────────────────────────────────── */}
+        {/* ── Coverage ─────────────────────────────────────────────────── */}
         <section id="colleges">
           <Container className="flex flex-col items-center gap-6 text-center">
             <p className="text-caption text-ash">
-              Built for placement cells and student chapters at
+              Every number is measured against a published benchmark
             </p>
-            <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 text-fog">
-              {COLLEGES.map((c) => (
-                <span
-                  key={c}
-                  className="text-body-sm font-[510] tracking-[-0.011em]"
-                >
-                  {c}
+            <div className="flex flex-wrap justify-center gap-x-12 gap-y-4">
+              {COVERAGE.map(([n, label]) => (
+                <span key={label} className="flex items-baseline gap-2">
+                  <span className="font-mono text-body-lg tabular text-mist">
+                    {n}
+                  </span>
+                  <span className="text-body-sm text-fog">{label}</span>
                 </span>
               ))}
             </div>
@@ -212,8 +211,8 @@ export default function LandingPage() {
                 Find out where you actually stand.
               </h2>
               <p className="max-w-[52ch] text-body-lg text-fog">
-                Upload a resume, pick a role, and get the full report in under
-                three seconds.
+                Upload a resume, pick a role, and get a cited, line-by-line
+                report. Switching target roles afterwards is instant.
               </p>
               <Button variant="pill" size="lg" asChild>
                 <Link href="/sign-up">Upload your resume</Link>
@@ -249,15 +248,13 @@ export default function LandingPage() {
               ["Get started", "/sign-up"],
             ]}
           />
-          <div className="flex flex-col gap-2">
-            <span className="t-micro">Benchmarks</span>
-            <span className="font-mono text-xs tabular text-ash">
-              Version 2026.1
-            </span>
-            <span className="font-mono text-xs tabular text-ash">
-              Refreshed weekly
-            </span>
-          </div>
+          <FooterCol
+            label="Benchmarks"
+            links={[
+              ["Read the rubric", "/benchmarks"],
+              ["The arithmetic", "/benchmarks#arithmetic"],
+            ]}
+          />
         </Container>
       </footer>
     </>

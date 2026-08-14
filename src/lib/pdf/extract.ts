@@ -6,6 +6,13 @@ export interface ExtractedResume {
   pagesText: string[]
   rawText: string
   parseMs: number
+  /**
+   * How the text was recovered. `text-layer` means the page indices below are
+   * the PDF's real ones; `ocr` and `pasted` mean they are synthesised, so a
+   * citation still verifies against what the model was shown but does not
+   * correspond to a physical page.
+   */
+  source: "text-layer" | "ocr" | "pasted"
 }
 
 export class ResumeParseError extends Error {
@@ -81,13 +88,26 @@ export async function extractResume(
     )
   }
 
-  const { totalPages, text } = await extractText(pdf, { mergePages: false })
-  const pagesText = (text as string[]).map(normalisePage)
+  let totalPages: number
+  let pagesText: string[]
+  try {
+    const extracted = await extractText(pdf, { mergePages: false })
+    totalPages = extracted.totalPages
+    pagesText = (extracted.text as string[]).map(normalisePage)
+  } catch {
+    // A PDF that opens but fails mid-extraction (corrupt content streams) must
+    // land on the 422 path, not as an uncaught 500 the client reads as a
+    // network failure.
+    throw new ResumeParseError(
+      "That PDF could not be read — some of it appears to be damaged.",
+      "unreadable"
+    )
+  }
   const rawText = pagesText.join("\n\n")
 
   if (rawText.trim().length < MIN_USEFUL_CHARS) {
     throw new ResumeParseError(
-      "That PDF has no selectable text — it's likely a scan or an image export. Paste your resume text instead.",
+      "That PDF has no selectable text — it's likely a scan or an image export. Switch to \"Paste the text\" and paste your resume instead.",
       "no-text-layer"
     )
   }
@@ -97,7 +117,30 @@ export async function extractResume(
     pagesText,
     rawText,
     parseMs: Math.round(performance.now() - started),
+    source: "text-layer",
   }
+}
+
+/** Lines per synthesised page when the source has no real page boundaries. */
+export const PSEUDO_PAGE_LINES = 60
+
+/**
+ * Text with no page structure → the same `string[]` shape the rest of the
+ * pipeline works on.
+ *
+ * Pasted resumes and OCR output arrive as one blob, but citations, the flagged
+ * lines panel and `verifyQuote` all index by page and line. Chunking into fixed
+ * pseudo-pages keeps "p.2 L14" meaningful and verifiable: it points at the text
+ * the model was actually shown, which is what the guard checks. It just is not
+ * the physical page — hence `source` on ExtractedResume.
+ */
+export function pseudoPages(text: string): string[] {
+  const lines = text.replace(/\r\n?/g, "\n").split("\n")
+  const pages: string[] = []
+  for (let i = 0; i < lines.length; i += PSEUDO_PAGE_LINES) {
+    pages.push(normalisePage(lines.slice(i, i + PSEUDO_PAGE_LINES).join("\n")))
+  }
+  return pages
 }
 
 /**

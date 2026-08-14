@@ -1,11 +1,12 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 
 import { db, schema } from "@/db"
 import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
+import { getShareForRun, newShareToken } from "@/lib/shares"
 import { replanRole } from "@/lib/replan"
 import { readinessScore, perTrackReadiness } from "@/lib/scoring/readiness"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -234,19 +235,16 @@ export async function toggleRoadmapItem(
     revalidatePath("/app/progress")
     return {
       ok: true,
+      // No estimated "before" value: showing an arrow from a number nobody
+      // measured would undercut the one thing this product promises.
       message:
         totalDelta > 0
-          ? `${item.label} done — readiness ${readiness - Math.round(deltaToReadiness(totalDelta))} → ${readiness}.`
+          ? `${item.label} done — readiness now ${readiness}.`
           : `${item.label} done.`,
       readiness,
       delta: totalDelta,
     }
   }
-}
-
-/** Rough conversion for toast copy only; the snapshot holds the real number. */
-function deltaToReadiness(levelDelta: number) {
-  return levelDelta * 1.5
 }
 
 /** Study-log bucket boundaries, in minutes → heatmap levels 1–4. */
@@ -319,7 +317,7 @@ export async function switchTargetRole(roleId: string): Promise<ActionSummary> {
     .select()
     .from(schema.roles)
     .where(eq(schema.roles.id, roleId))
-  if (!role) return { ok: false, message: "Unknown role." }
+  if (!role) return { ok: false, message: "That role isn't available — pick one from the list." }
 
   try {
     const { readiness, openGaps } = await replanRole({
@@ -348,13 +346,13 @@ export async function switchTargetRole(roleId: string): Promise<ActionSummary> {
     revalidatePath("/app/progress")
     return {
       ok: true,
-      message: `Measured against ${role.name}: readiness ${readiness}, ${openGaps} open gaps. No model call — same evidence, different bar.`,
+      message: `Measured against ${role.name}: readiness ${readiness}, ${openGaps} open gaps. Same evidence, different bar — no re-upload needed.`,
       readiness,
     }
   } catch (err) {
     return {
       ok: false,
-      message: err instanceof Error ? err.message : "Could not switch roles.",
+      message: err instanceof Error ? err.message : "Could not switch roles. Try again.",
     }
   }
 }
@@ -416,6 +414,105 @@ export async function updateProfile(formData: FormData): Promise<ActionSummary> 
 
   revalidatePath("/app/settings")
   return { ok: true, message: "Profile saved." }
+}
+
+// ─── Sharing ─────────────────────────────────────────────────────────────────
+
+export type ShareState = {
+  ok: boolean
+  message: string
+  token?: string
+  showName?: boolean
+}
+
+/**
+ * Mints a read-only link to the latest analysis, or returns the existing one.
+ *
+ * Idempotent on purpose: a student who clicks "Share" twice should get the same
+ * URL, not silently orphan the one they already pasted into an email.
+ */
+export async function createShareLink(): Promise<ShareState> {
+  const student = await ensureStudent()
+  const run = await getLatestRun(student.id)
+  if (!run) return { ok: false, message: "Analyse a resume first." }
+
+  const existing = await getShareForRun(student.id, run.id)
+  if (existing) {
+    return {
+      ok: true,
+      message: "Link ready.",
+      token: existing.token,
+      showName: existing.showName,
+    }
+  }
+
+  const token = newShareToken()
+  await db.insert(schema.reportShares).values({
+    token,
+    studentId: student.id,
+    runId: run.id,
+  })
+
+  revalidatePath("/app/map")
+  return {
+    ok: true,
+    message: "Link created — anyone with it can see this report.",
+    token,
+    showName: true,
+  }
+}
+
+/**
+ * Revokes every live link this student holds on the current run.
+ *
+ * Plural because a run can accumulate shares if one was revoked and re-created;
+ * "stop sharing" has to mean all of them or it means nothing.
+ */
+export async function revokeShareLink(): Promise<ShareState> {
+  const student = await ensureStudent()
+  const run = await getLatestRun(student.id)
+  if (!run) return { ok: false, message: "Nothing to revoke." }
+
+  await db
+    .update(schema.reportShares)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(schema.reportShares.studentId, student.id),
+        eq(schema.reportShares.runId, run.id),
+        isNull(schema.reportShares.revokedAt)
+      )
+    )
+
+  revalidatePath("/app/map")
+  return { ok: true, message: "Link revoked — it now shows a 404." }
+}
+
+/** Toggles whether the shared report carries the student's name. */
+export async function setShareShowName(showName: boolean): Promise<ShareState> {
+  const student = await ensureStudent()
+  const run = await getLatestRun(student.id)
+  if (!run) return { ok: false, message: "Nothing to update." }
+
+  await db
+    .update(schema.reportShares)
+    .set({ showName })
+    .where(
+      and(
+        eq(schema.reportShares.studentId, student.id),
+        eq(schema.reportShares.runId, run.id),
+        isNull(schema.reportShares.revokedAt)
+      )
+    )
+
+  const share = await getShareForRun(student.id, run.id)
+  revalidatePath("/app/map")
+  return {
+    ok: true,
+    message: showName ? "Your name is shown." : "Your name is hidden.",
+    token: share?.token,
+    showName,
+  }
 }
 
 /** Marks an interview question practised — habit trail, not readiness. */

@@ -6,6 +6,8 @@ import { WorkspaceFrame } from "@/components/shell/workspace"
 
 import { SettingsForm } from "./settings-form"
 
+export const metadata = { title: "Settings · SkillForge" }
+
 export default async function SettingsPage() {
   await requireAuth()
   const student = await ensureStudent()

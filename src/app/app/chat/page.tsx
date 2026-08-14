@@ -1,23 +1,41 @@
+import { desc, eq } from "drizzle-orm"
+
 import { requireAuth } from "@/lib/auth"
 import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
+import { db, schema } from "@/db"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { SectionHead } from "@/components/shell/section"
 import { WorkspaceFrame } from "@/components/shell/workspace"
 
 import { ChatClient } from "./chat-client"
 
+export const metadata = { title: "Mentor · SkillForge" }
+
 export default async function ChatPage() {
   await requireAuth()
   const student = await ensureStudent()
-  const run = await getLatestRun(student.id)
+
+  const [run, threads] = await Promise.all([
+    getLatestRun(student.id),
+    db
+      .select({
+        id: schema.chatThreads.id,
+        title: schema.chatThreads.title,
+        updatedAt: schema.chatThreads.updatedAt,
+      })
+      .from(schema.chatThreads)
+      .where(eq(schema.chatThreads.studentId, student.id))
+      .orderBy(desc(schema.chatThreads.updatedAt))
+      .limit(20),
+  ])
 
   return (
     <div className="flex flex-col gap-6">
       <SectionHead eyebrow="Step 06" title="Mentor">
-        The mentor reads the same rows the dashboards render. It can explain
-        your numbers and turn them into next actions — it cannot invent a
-        score, a course, or a plan the scheduler didn&rsquo;t produce.
+        The mentor sees the same numbers your dashboards show, and can search
+        the web for real material. It explains your plan and turns it into next
+        actions &mdash; it never invents a score.
       </SectionHead>
 
       <WorkspaceFrame
@@ -28,7 +46,7 @@ export default async function ChatPage() {
           run ? (
             <Badge variant="ok">
               <BadgeDot />
-              Grounded in your latest analysis
+              Grounded in your analysis
             </Badge>
           ) : (
             <Badge variant="err">
@@ -38,7 +56,13 @@ export default async function ChatPage() {
           )
         }
       >
-        <ChatClient />
+        <ChatClient
+          initialThreads={threads.map((t) => ({
+            id: t.id,
+            title: t.title,
+            updatedAt: t.updatedAt.toISOString(),
+          }))}
+        />
       </WorkspaceFrame>
     </div>
   )

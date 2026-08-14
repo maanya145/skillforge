@@ -48,10 +48,10 @@ export function HoursControl({ current }: { current: number }) {
               : "h-6 rounded-full px-2.5 text-xs text-fog"
           }
         >
-          {option}h
+          {option}
         </Button>
       ))}
-      <span className="pr-2 pl-1 text-xs text-ash">/ week</span>
+      <span className="pr-2 pl-1 text-xs text-ash">hrs/week</span>
     </div>
   )
 }

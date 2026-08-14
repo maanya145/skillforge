@@ -74,21 +74,20 @@ function QuestionRow({ question: q }: { question: PracticeQuestion }) {
             {q.isGapTrack ? (
               <Badge variant="err">
                 <BadgeDot />
-                gap track
+                Gap track
               </Badge>
             ) : (
-              <Badge>covered</Badge>
+              <Badge>Covered</Badge>
             )}
             {practised ? (
               <Badge variant="ok">
                 <BadgeDot />
-                practised
+                Practised
               </Badge>
             ) : null}
             <span className="font-mono text-xs text-ash">
               {q.topic}
-              {q.company ? ` · ${q.company} ${q.round ?? ""}` : ""}
-              {q.year ? ` · ${q.year}` : ""}
+              {q.company ? ` · ${q.company}-style` : ""}
             </span>
           </div>
         </button>
@@ -101,8 +100,7 @@ function QuestionRow({ question: q }: { question: PracticeQuestion }) {
           </DialogTitle>
           <DialogDescription className="font-mono text-xs text-ash">
             {q.topic}
-            {q.company ? ` · asked at ${q.company}, ${q.round ?? ""}` : ""}
-            {q.year ? ` ${q.year}` : ""}
+            {q.company ? ` · the kind ${q.company} asks` : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,7 +126,7 @@ function QuestionRow({ question: q }: { question: PracticeQuestion }) {
                 </Button>
               ) : (
                 <p className="text-xs text-ash">
-                  No outline for this one yet.
+                  No answer shape for this one yet.
                 </p>
               )}
             </div>

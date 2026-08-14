@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 import { AppFrame, AppBar, Crumb } from "@/components/shell/frame"
-import { AppSidebar } from "@/components/shell/app-sidebar"
+import { AppSidebar, MobileNav } from "@/components/shell/app-sidebar"
 
 /**
  * The frame every workspace screen sits in: app bar, sidebar, content.
@@ -33,6 +33,9 @@ export function WorkspaceFrame({
           <div className="flex items-center gap-2">{tools}</div>
         ) : null}
       </AppBar>
+      {/* Below lg the sidebar is hidden, so the workspace needs its own
+          navigation or a phone user is stranded on whichever screen loaded. */}
+      <MobileNav current={current} className="lg:hidden" />
       <div className="grid grid-cols-1 lg:grid-cols-[180px_minmax(0,1fr)]">
         <AppSidebar current={current} className="hidden lg:flex" />
         <div className="min-w-0 p-4">{children}</div>

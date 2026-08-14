@@ -11,8 +11,12 @@
  * `server-only` and throws outside a Next request. The seed owns its own pool.
  */
 import { setDefaultResultOrder } from "node:dns"
-import { Pool } from "pg"
-import { drizzle } from "drizzle-orm/node-postgres"
+import {
+  setDefaultAutoSelectFamily,
+  setDefaultAutoSelectFamilyAttemptTimeout,
+} from "node:net"
+import { neon } from "@neondatabase/serverless"
+import { drizzle } from "drizzle-orm/neon-http"
 import { sql } from "drizzle-orm"
 
 import * as schema from "../schema"
@@ -29,6 +33,8 @@ import { PROJECT_CATALOG, CERT_CATALOG, QUESTION_BANK } from "./catalogs"
 // Neon publishes AAAA records; on a network without IPv6 egress every
 // connection dies with EHOSTUNREACH before reaching Postgres.
 setDefaultResultOrder("ipv4first")
+setDefaultAutoSelectFamily(false)
+setDefaultAutoSelectFamilyAttemptTimeout(5_000)
 
 const connectionString = process.env.DATABASE_URL
 if (!connectionString) {
@@ -36,8 +42,9 @@ if (!connectionString) {
   process.exit(1)
 }
 
-const pool = new Pool({ connectionString, max: 3 })
-const db = drizzle(pool, { schema })
+// Same HTTP driver the app uses — see src/db/client.ts for why pooled drivers
+// were abandoned here.
+const db = drizzle(neon(connectionString), { schema })
 
 async function main() {
   // Mastra creates its memory and trace tables here on first use. Making the
@@ -178,8 +185,4 @@ async function main() {
   )
 }
 
-try {
-  await main()
-} finally {
-  await pool.end()
-}
+await main()
