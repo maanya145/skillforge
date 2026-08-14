@@ -1,25 +1,45 @@
 import Link from "next/link"
+import {
+  BadgeCheck,
+  CalendarRange,
+  Dumbbell,
+  FileText,
+  Gauge,
+  MessageCircle,
+  Newspaper,
+  Settings,
+  Sparkles,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
 export type SidebarItem = {
   href: string
   label: string
+  icon: LucideIcon
   /** Mono suffix — a count, a duration, a score */
   count?: string
 }
 
+/**
+ * Icons are per-destination and match the command palette exactly — the same
+ * place should carry the same glyph however you reach it. Previously every row
+ * rendered an identical bordered square, which carried no information and read
+ * as a column of unchecked checkboxes.
+ */
 export const WORKSPACE_NAV: SidebarItem[] = [
-  { href: "/app/intake", label: "Intake" },
-  { href: "/app/map", label: "Skill map" },
-  { href: "/app/roadmap", label: "Roadmap" },
-  { href: "/app/practice", label: "Practice" },
-  { href: "/app/certifications", label: "Certifications" },
-  { href: "/app/progress", label: "Progress" },
-  { href: "/app/feed", label: "Feed" },
-  { href: "/app/chat", label: "Mentor" },
-  { href: "/app/studio", label: "Studio" },
-  { href: "/app/settings", label: "Settings" },
+  { href: "/app/intake", label: "Intake", icon: FileText },
+  { href: "/app/map", label: "Skill map", icon: Gauge },
+  { href: "/app/roadmap", label: "Roadmap", icon: CalendarRange },
+  { href: "/app/practice", label: "Practice", icon: Dumbbell },
+  { href: "/app/certifications", label: "Certifications", icon: BadgeCheck },
+  { href: "/app/progress", label: "Progress", icon: TrendingUp },
+  { href: "/app/feed", label: "Feed", icon: Newspaper },
+  { href: "/app/chat", label: "Mentor", icon: MessageCircle },
+  { href: "/app/studio", label: "Studio", icon: Sparkles },
+  { href: "/app/settings", label: "Settings", icon: Settings },
 ]
 
 /**
@@ -51,13 +71,14 @@ export function AppSidebar({
       <span className="t-micro px-3 pt-2 pb-1">{label}</span>
       {items.map((item) => {
         const active = current === item.href || current.startsWith(item.href + "/")
+        const Icon = item.icon
         return (
           <Link
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex items-center gap-2 rounded-md px-3 py-1.5 text-caption transition-colors",
+              "relative flex items-center gap-2.5 rounded-md px-3 py-1.5 text-caption transition-colors",
               active
                 ? "bg-white/5 text-paper"
                 : "text-fog hover:bg-white/[0.03] hover:text-mist"
@@ -69,9 +90,14 @@ export function AppSidebar({
                 className="absolute top-1/2 left-0 h-3.5 w-0.5 -translate-y-1/2 rounded-sm bg-acid-lime"
               />
             ) : null}
-            <span
+            {/* Dimmer than the label so the icon reads as a marker, not a
+                second thing to scan. The active row brings it up to match. */}
+            <Icon
               aria-hidden
-              className="size-3 shrink-0 rounded-sm border border-current opacity-60"
+              className={cn(
+                "size-3.5 shrink-0",
+                active ? "text-paper" : "text-ash"
+              )}
             />
             {item.label}
             {item.count ? (

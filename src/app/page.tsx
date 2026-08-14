@@ -15,7 +15,25 @@ import {
   ToolPill,
   Kbd,
 } from "@/components/shell/frame"
-import { AppSidebar } from "@/components/shell/app-sidebar"
+import { AppSidebar, WORKSPACE_NAV } from "@/components/shell/app-sidebar"
+
+/**
+ * The hero screenshot's sidebar, derived from the real navigation so the
+ * marketing page cannot drift from the product. Only the sample counts are
+ * added here.
+ */
+const HERO_COUNTS: Record<string, string> = {
+  "/app/intake": "3",
+  "/app/map": "12",
+  "/app/roadmap": "14 wks",
+  "/app/practice": "9",
+  "/app/progress": "71",
+}
+
+const HERO_NAV = WORKSPACE_NAV.filter((i) => i.href in HERO_COUNTS).map((i) => ({
+  ...i,
+  count: HERO_COUNTS[i.href],
+}))
 import { GapGauge, GaugeLegend } from "@/components/viz/gap-gauge"
 import {
   SAMPLE_GAUGES,
@@ -125,13 +143,7 @@ export default function LandingPage() {
                 <AppSidebar
                   current="/app/map"
                   className="hidden lg:flex"
-                  items={[
-                    { href: "/app/intake", label: "Intake", count: "3" },
-                    { href: "/app/map", label: "Skill map", count: "12" },
-                    { href: "/app/roadmap", label: "Roadmap", count: "14 wks" },
-                    { href: "/app/practice", label: "Practice", count: "9" },
-                    { href: "/app/progress", label: "Progress", count: "71" },
-                  ]}
+                  items={HERO_NAV}
                 />
 
                 <AppBody>
