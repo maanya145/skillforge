@@ -90,6 +90,12 @@ export function IntakeClient({
         setRun(next)
         if (next.status === "succeeded") {
           clearInterval(timer)
+          // Kick off web discovery in its own request so results are waiting by
+          // the time they reach Practice. keepalive lets it survive the
+          // navigation below; failure is silent because it is purely additive.
+          void fetch("/api/discovery", { method: "POST", keepalive: true }).catch(
+            () => {}
+          )
           router.refresh()
           router.push("/app/map")
         }

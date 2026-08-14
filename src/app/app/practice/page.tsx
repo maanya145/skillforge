@@ -4,6 +4,9 @@ import { requireAuth } from "@/lib/auth"
 import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
 import { getRecommendations } from "@/lib/plan-queries"
+import { getDiscoveries } from "@/lib/discovery/discover"
+import { db, schema } from "@/db"
+import { FoundForYou } from "./found-for-you"
 import { Button } from "@/components/ui/button"
 import { Badge, BadgeDot } from "@/components/ui/badge"
 import { SectionHead } from "@/components/shell/section"
@@ -28,6 +31,12 @@ export default async function PracticePage() {
   const student = await ensureStudent()
   const run = await getLatestRun(student.id)
   const recs = run ? await getRecommendations(run.id) : null
+
+  const discoveries = run ? await getDiscoveries(student.id, run.id) : []
+  const tracks = await db
+    .select({ id: schema.skillTracks.id, name: schema.skillTracks.name })
+    .from(schema.skillTracks)
+  const trackNames = Object.fromEntries(tracks.map((t) => [t.id, t.name]))
 
   return (
     <div className="flex flex-col gap-6">
@@ -151,6 +160,12 @@ export default async function PracticePage() {
             </div>
           </div>
         )}
+
+        {run ? (
+          <div className="mt-6 border-t border-graphite pt-4">
+            <FoundForYou items={discoveries} trackNames={trackNames} />
+          </div>
+        ) : null}
       </WorkspaceFrame>
     </div>
   )

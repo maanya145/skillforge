@@ -50,6 +50,7 @@ export const evidenceKind = pgEnum("evidence_kind", [
   "publication",
 ])
 export const certVerdict = pgEnum("cert_verdict", ["worth_it", "skip", "later"])
+export const discoveredKind = pgEnum("discovered_kind", ["course", "project"])
 export const eventType = pgEnum("event_type", [
   "study_session",
   "item_completed",
@@ -554,6 +555,63 @@ export const chatMessages = pgTable(
       .defaultNow(),
   },
   (t) => [index("messages_thread_idx").on(t.threadId, t.createdAt)]
+)
+
+// ─── Discovery ───────────────────────────────────────────────────────────────
+
+/**
+ * Courses and project ideas found on the open web for one student's open gaps.
+ *
+ * Kept in its own table rather than merged into `project_catalog` on purpose.
+ * The seeded catalogs are the product's authority: hand-authored, versioned,
+ * with verified `effortWeeks` and prerequisites the scheduler depends on.
+ * Anything a model found on the web has none of that, so it stays here, is
+ * shown as a separate "Found for you" surface, and never reaches the roadmap.
+ *
+ * What it DOES share is the scorer. `score` is produced by the same
+ * Σ(weightₜ · gapₜ) arithmetic that ranks the seeded catalog — the model's only
+ * job is to propose a candidate and map it to track ids from the closed seeded
+ * vocabulary. It never assigns a number.
+ */
+export const discoveredResources = pgTable(
+  "discovered_resources",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    runId: uuid("run_id")
+      .notNull()
+      .references(() => analysisRuns.id, { onDelete: "cascade" }),
+    kind: discoveredKind("kind").notNull(),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    /** Host, shown as provenance so a student can judge the source. */
+    source: text("source").notNull(),
+    summary: text("summary").notNull(),
+    /** Post-validated against the seeded track ids; unknown ids are dropped. */
+    closesTrackIds: jsonb("closes_track_ids").$type<string[]>().notNull(),
+    /** Model's estimate, clamped. Advisory only — never fed to the scheduler. */
+    effortWeeks: integer("effort_weeks"),
+    costNote: text("cost_note"),
+    /** Deterministic: Σ(weightₜ · gapₜ) over the open tracks it touches. */
+    score: real("score").notNull(),
+    rank: integer("rank").notNull(),
+    /** Template over the same numbers, so prose can't contradict the score. */
+    rationale: text("rationale").notNull(),
+    /** Which generated query surfaced this — the audit trail for a finding. */
+    sourceQuery: text("source_query").notNull(),
+    status: text("status").notNull().default("new"),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // One row per student per URL: re-running discovery refreshes rather than
+    // accumulating duplicates of the same course.
+    uniqueIndex("discovered_student_url_uidx").on(t.studentId, t.url),
+    index("discovered_run_idx").on(t.runId, t.rank),
+  ]
 )
 
 // ─── Sharing ─────────────────────────────────────────────────────────────────

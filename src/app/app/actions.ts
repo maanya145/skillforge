@@ -7,6 +7,7 @@ import { db, schema } from "@/db"
 import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
 import { getShareForRun, newShareToken } from "@/lib/shares"
+import { discoverForRun } from "@/lib/discovery/discover"
 import { replanRole } from "@/lib/replan"
 import { readinessScore, perTrackReadiness } from "@/lib/scoring/readiness"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -414,6 +415,28 @@ export async function updateProfile(formData: FormData): Promise<ActionSummary> 
 
   revalidatePath("/app/settings")
   return { ok: true, message: "Profile saved." }
+}
+
+// ─── Discovery ───────────────────────────────────────────────────────────────
+
+/**
+ * Searches the open web for courses and projects matching this student's top
+ * open gaps. Slow — several searches plus a classification pass — so the UI
+ * runs it behind a pending state rather than optimistically.
+ */
+export async function refreshDiscoveries(): Promise<ActionSummary> {
+  const student = await ensureStudent()
+  const run = await getLatestRun(student.id)
+  if (!run) return { ok: false, message: "Analyse a resume first." }
+
+  try {
+    const outcome = await discoverForRun({ studentId: student.id, runId: run.id })
+    revalidatePath("/app/practice")
+    return { ok: outcome.found > 0, message: outcome.message }
+  } catch (err) {
+    console.error("[discovery] refresh failed:", err)
+    return { ok: false, message: "The search failed. Try again in a moment." }
+  }
 }
 
 // ─── Sharing ─────────────────────────────────────────────────────────────────
