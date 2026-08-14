@@ -1,4 +1,5 @@
 import { after } from "next/server"
+import { auth } from "@clerk/nextjs/server"
 
 import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
@@ -21,6 +22,16 @@ export const maxDuration = 300
  * covers the case where this request was cut short.
  */
 export async function POST() {
+  // ensureStudent throws on no session, which would surface as an opaque 500.
+  // An expired session is a normal client event and deserves a 401.
+  const { userId } = await auth()
+  if (!userId) {
+    return Response.json(
+      { error: "Your session expired — sign in again.", code: "unauthorized" },
+      { status: 401 }
+    )
+  }
+
   const student = await ensureStudent()
   const run = await getLatestRun(student.id)
   if (!run) {

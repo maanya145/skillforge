@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto"
 import { after, type NextRequest } from "next/server"
+import { auth } from "@clerk/nextjs/server"
 import { and, desc, eq, isNotNull } from "drizzle-orm"
 
 import { db, schema } from "@/db"
@@ -57,6 +58,17 @@ function friendlyFailure(err: unknown): string {
 }
 
 export async function POST(request: NextRequest) {
+  // ensureStudent throws on no session. The client already handles a 401 by
+  // telling the student to sign in again; an opaque 500 sends it down the
+  // "the upload failed, try again" path, which is a lie.
+  const { userId } = await auth()
+  if (!userId) {
+    return Response.json(
+      { error: "Your session expired — sign in again.", code: "unauthorized" },
+      { status: 401 }
+    )
+  }
+
   const student = await ensureStudent()
 
   // ── One analysis at a time ────────────────────────────────────────────────
