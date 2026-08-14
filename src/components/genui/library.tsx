@@ -154,6 +154,104 @@ const Steps = defineComponent({
   ),
 })
 
+/** https only — this string goes straight into an `src`. */
+function safeHttps(raw: string): string | null {
+  try {
+    const url = new URL(raw)
+    return url.protocol === "https:" ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+const Media = defineComponent({
+  name: "Image",
+  description:
+    "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists.",
+  props: z.object({
+    url: z.string().describe("Image URL from preview_link's `image` field"),
+    alt: z.string().describe("What the image shows"),
+    caption: z.string().optional(),
+    href: z.string().optional().describe("Page the image links to"),
+  }),
+  component: ({ props }) => {
+    const src = safeHttps(props.url)
+    // A bad URL renders nothing rather than a broken-image icon: an empty slot
+    // reads as "no picture", a broken one reads as "this product is broken".
+    if (!src) return null
+
+    const figure = (
+      <figure className="flex flex-col gap-1.5">
+        {/* eslint-disable-next-line @next/next/no-img-element -- remote hosts are
+            unknown at build time, so next/image's allowlist cannot cover them. */}
+        <img
+          src={src}
+          alt={props.alt}
+          loading="lazy"
+          decoding="async"
+          // Don't leak which SkillForge screen the student is on to the host.
+          referrerPolicy="no-referrer"
+          className="max-h-72 w-full rounded-md object-cover shadow-subtle"
+        />
+        {props.caption ? (
+          <figcaption className="text-xs text-ash">{props.caption}</figcaption>
+        ) : null}
+      </figure>
+    )
+
+    const href = props.href ? safeHttps(props.href) : null
+    return href ? (
+      <a href={href} target="_blank" rel="noopener noreferrer nofollow">
+        {figure}
+      </a>
+    ) : (
+      figure
+    )
+  },
+})
+
+const Embed = defineComponent({
+  name: "Embed",
+  description:
+    "An inline YouTube or Vimeo player. Only use when preview_link returned a videoProvider and videoId — pass those exact values.",
+  props: z.object({
+    provider: z.enum(["youtube", "vimeo"]),
+    videoId: z.string().describe("The `videoId` from preview_link"),
+    title: z.string(),
+  }),
+  component: ({ props }) => {
+    // The id is pattern-checked rather than interpolated blind. An <iframe>
+    // src is the one place in this library where a crafted string could load
+    // third-party code, so nothing reaches it that is not [A-Za-z0-9_-].
+    const id = props.videoId.trim()
+    const valid =
+      props.provider === "youtube" ? /^[\w-]{11}$/.test(id) : /^\d+$/.test(id)
+    if (!valid) return null
+
+    const src =
+      props.provider === "youtube"
+        ? `https://www.youtube-nocookie.com/embed/${id}`
+        : `https://player.vimeo.com/video/${id}`
+
+    return (
+      <figure className="flex flex-col gap-1.5">
+        <div className="aspect-video w-full overflow-hidden rounded-md shadow-subtle">
+          <iframe
+            src={src}
+            title={props.title}
+            loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"
+            referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-presentation"
+            className="size-full border-0"
+          />
+        </div>
+        <figcaption className="text-xs text-ash">{props.title}</figcaption>
+      </figure>
+    )
+  },
+})
+
 /**
  * The root. Everything the model emits is a sequence of these blocks — which
  * is what keeps generated output composed of vetted pieces rather than
@@ -165,7 +263,15 @@ const Answer = defineComponent({
     "The root container. Holds an ordered sequence of blocks that together answer the student's question.",
   props: z.object({
     blocks: z.array(
-      z.union([Text.ref, Gauge.ref, Stat.ref, Resource.ref, Steps.ref])
+      z.union([
+        Text.ref,
+        Gauge.ref,
+        Stat.ref,
+        Resource.ref,
+        Steps.ref,
+        Media.ref,
+        Embed.ref,
+      ])
     ),
   }),
   component: ({ props, renderNode }) => (
@@ -175,5 +281,5 @@ const Answer = defineComponent({
 
 export const skillforgeLibrary = createLibrary({
   root: "Answer",
-  components: [Answer, Text, Gauge, Stat, Resource, Steps],
+  components: [Answer, Text, Gauge, Stat, Resource, Steps, Media, Embed],
 })

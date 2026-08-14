@@ -2,7 +2,7 @@
   "root": "Answer",
   "components": {
     "Answer": {
-      "signature": "Answer(blocks: (Text | Gauge | Stat | Resource | Steps)[])",
+      "signature": "Answer(blocks: (Text | Gauge | Stat | Resource | Steps | Image | Embed)[])",
       "description": "The root container. Holds an ordered sequence of blocks that together answer the student's question."
     },
     "Text": {
@@ -24,6 +24,14 @@
     "Steps": {
       "signature": "Steps(items: string[])",
       "description": "An ordered list of concrete next actions. Each item should be something the student could start today."
+    },
+    "Image": {
+      "signature": "Image(url: string, alt: string, caption?: string, href?: string)",
+      "description": "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+    },
+    "Embed": {
+      "signature": "Embed(provider: \"youtube\" | \"vimeo\", videoId: string, title: string)",
+      "description": "An inline YouTube or Vimeo player. Only use when preview_link returned a videoProvider and videoId — pass those exact values."
     }
   },
   "schema": {
@@ -47,6 +55,12 @@
       },
       "Steps": {
         "$ref": "#/$defs/Steps"
+      },
+      "Image": {
+        "$ref": "#/$defs/Image"
+      },
+      "Embed": {
+        "$ref": "#/$defs/Embed"
       }
     },
     "required": [
@@ -55,7 +69,9 @@
       "Gauge",
       "Stat",
       "Resource",
-      "Steps"
+      "Steps",
+      "Image",
+      "Embed"
     ],
     "additionalProperties": false,
     "$defs": {
@@ -80,6 +96,12 @@
                 },
                 {
                   "$ref": "#/$defs/Steps"
+                },
+                {
+                  "$ref": "#/$defs/Image"
+                },
+                {
+                  "$ref": "#/$defs/Embed"
                 }
               ]
             }
@@ -203,6 +225,54 @@
         ],
         "additionalProperties": false,
         "description": "An ordered list of concrete next actions. Each item should be something the student could start today."
+      },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "alt"
+        ],
+        "additionalProperties": false,
+        "description": "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+      },
+      "Embed": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "youtube",
+              "vimeo"
+            ]
+          },
+          "videoId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "videoId",
+          "title"
+        ],
+        "additionalProperties": false,
+        "description": "An inline YouTube or Vimeo player. Only use when preview_link returned a videoProvider and videoId — pass those exact values."
       }
     }
   }

@@ -11,6 +11,7 @@ import {
   searchRepositories,
   searchDiscussions,
 } from "@/lib/lookup"
+import { fetchLinkPreview } from "@/lib/preview"
 import { nextRung } from "@/lib/scoring/level"
 import type { LevelRubric } from "@/lib/scoring/types"
 
@@ -375,6 +376,50 @@ export function createMentorTools(studentId: string) {
     },
   })
 
+  const preview = createTool({
+    id: "preview_link",
+    description:
+      "Read a public page's own Open Graph metadata: title, description, thumbnail image, and whether it is an embeddable YouTube or Vimeo video. Use this before showing an Image or Embed for a link, so the media you render is what the page actually advertises rather than a guess. Only call it with a URL another tool returned.",
+    inputSchema: z.object({
+      url: z.string().describe("An https URL returned by an earlier tool call"),
+    }),
+    outputSchema: z.object({
+      found: z.boolean(),
+      url: z.string().nullable(),
+      title: z.string().nullable(),
+      description: z.string().nullable(),
+      image: z.string().nullable(),
+      siteName: z.string().nullable(),
+      videoProvider: z.string().nullable(),
+      videoId: z.string().nullable(),
+    }),
+    execute: async ({ url }) => {
+      const result = await fetchLinkPreview(url)
+      if (!result) {
+        return {
+          found: false,
+          url: null,
+          title: null,
+          description: null,
+          image: null,
+          siteName: null,
+          videoProvider: null,
+          videoId: null,
+        }
+      }
+      return {
+        found: true,
+        url: result.url,
+        title: result.title,
+        description: result.description,
+        image: result.image,
+        siteName: result.siteName,
+        videoProvider: result.video?.provider ?? null,
+        videoId: result.video?.id ?? null,
+      }
+    },
+  })
+
   const logStudy = createTool({
     id: "log_study_session",
     description:
@@ -428,6 +473,7 @@ export function createMentorTools(studentId: string) {
     compare_target_roles: compare,
     find_learning_resources: findResources,
     look_up_concept: defineConcept,
+    preview_link: preview,
     log_study_session: logStudy,
   }
 }

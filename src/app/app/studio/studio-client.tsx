@@ -9,7 +9,6 @@ import { TOOL_LABELS } from "@/mastra/tools/tool-labels"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { SubCard } from "@/components/shell/frame"
-import { cn } from "@/lib/utils"
 
 const STARTERS = [
   "Where am I weakest, and how long to fix it?",
@@ -23,9 +22,7 @@ const STARTERS = [
  *
  * The streamed text is openui-lang, fed to the renderer on every chunk. The
  * parser tolerates a partial program, so blocks appear as their statements
- * complete rather than the whole answer landing at once — which is also why
- * the raw source is worth showing: it makes the "the model wrote this UI"
- * claim checkable rather than asserted.
+ * complete rather than the whole answer landing at once.
  */
 export function StudioClient() {
   const [question, setQuestion] = useState("")
@@ -33,7 +30,6 @@ export function StudioClient() {
   const [streaming, setStreaming] = useState(false)
   const [tools, setTools] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [showSource, setShowSource] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   async function ask(text: string) {
@@ -195,29 +191,6 @@ export function StudioClient() {
         <SubCard className="border border-coral-red/30">
           <p className="text-xs text-coral-red">{error}</p>
         </SubCard>
-      ) : null}
-
-      {/* The receipt */}
-      {response ? (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowSource((v) => !v)}
-            className="text-xs text-ash transition-colors hover:text-fog"
-          >
-            {showSource ? "Hide" : "Show"} what the model actually wrote
-          </button>
-          {showSource ? (
-            <pre
-              className={cn(
-                "mt-2 max-h-80 overflow-auto rounded-md bg-white/[0.02] p-3",
-                "font-mono text-xs whitespace-pre-wrap text-ash shadow-subtle"
-              )}
-            >
-              {response}
-            </pre>
-          ) : null}
-        </div>
       ) : null}
     </div>
   )

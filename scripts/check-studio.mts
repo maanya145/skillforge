@@ -25,7 +25,9 @@ if (!student) {
   process.exit(0)
 }
 
-const question = "Where am I weakest, and how long would it take to fix?"
+const question =
+  process.argv.slice(2).join(" ") ||
+  "Where am I weakest, and how long would it take to fix?"
 console.log(`student  ${student.fullName ?? student.id.slice(0, 8)}`)
 console.log(`question ${question}\n`)
 
@@ -68,8 +70,17 @@ if (/\b(Gauge|Stat|Text|Resource|Steps)\([a-zA-Z_]+\s*:/.test(answer)) {
   problems.push("used named `arg:` syntax — positional only, this breaks silently")
 }
 
-const components = [...answer.matchAll(/\b(Text|Gauge|Stat|Resource|Steps)\(/g)]
-console.log(`blocks   ${components.length} component calls`)
+// Media must be grounded: an Image or Embed without a preview_link call means
+// the URL was invented, which is exactly what this component set exists to stop.
+const usesMedia = /\b(Image|Embed)\(/.test(answer)
+if (usesMedia && !tools.includes("preview_link")) {
+  problems.push("rendered Image/Embed without calling preview_link — invented media")
+}
+
+const components = [
+  ...answer.matchAll(/\b(Text|Gauge|Stat|Resource|Steps|Image|Embed)\(/g),
+]
+console.log(`blocks   ${components.length} component calls${usesMedia ? " (incl. media)" : ""}`)
 
 if (problems.length) {
   console.error(`\n✗ ${problems.length} problem(s):`)
