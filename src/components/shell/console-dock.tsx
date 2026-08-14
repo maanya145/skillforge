@@ -7,6 +7,9 @@ import { Gamepad2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ConsoleDevice } from "@/components/shell/console-device"
 
+/** Dispatch this on window to open the dock from anywhere (the ⌘K palette does). */
+export const CONSOLE_SUMMON_EVENT = "skillforge:console"
+
 /**
  * Docks the console in the bottom-right of every workspace screen.
  *
@@ -31,6 +34,15 @@ export function ConsoleDock() {
     return () => window.removeEventListener("keydown", onKey)
   }, [open])
 
+  // The ⌘K palette can summon it — a loose event rather than lifted state,
+  // because the palette and the dock live in unrelated corners of the layout
+  // and this is the only message that ever passes between them.
+  React.useEffect(() => {
+    const onSummon = () => setOpen(true)
+    window.addEventListener(CONSOLE_SUMMON_EVENT, onSummon)
+    return () => window.removeEventListener(CONSOLE_SUMMON_EVENT, onSummon)
+  }, [])
+
   return (
     <div className="pointer-events-none fixed right-6 bottom-6 z-40 hidden lg:block">
       {open ? (
@@ -52,13 +64,23 @@ export function ConsoleDock() {
           type="button"
           onClick={() => setOpen(true)}
           className={cn(
-            "pointer-events-auto flex items-center gap-2 rounded-full border border-graphite bg-carbon px-4 py-2 text-xs text-fog",
-            "shadow-subtle transition-all hover:-translate-y-0.5 hover:text-mist",
+            // Carbon-on-void was invisible by construction — a launcher for a
+            // toy has to promise the toy. Bone chassis, dark screen slot and
+            // the powered LED make it read as the device it opens.
+            "group pointer-events-auto flex items-center gap-2.5 rounded-full bg-bone py-2 pr-4 pl-2.5 text-xs font-[590] text-void",
+            "shadow-[0_1px_0_rgba(255,255,255,0.5)_inset,0_8px_20px_rgba(0,0,0,0.5)]",
+            "animate-in slide-in-from-bottom-4 fade-in transition-transform duration-500 hover:-translate-y-0.5",
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mist"
           )}
         >
-          <Gamepad2 className="size-4" aria-hidden strokeWidth={2} />
+          <span className="grid size-6 place-items-center rounded-full bg-void text-bone">
+            <Gamepad2 className="size-3.5" aria-hidden strokeWidth={2} />
+          </span>
           Console
+          <span
+            aria-hidden
+            className="size-1.5 rounded-full bg-pulse-green shadow-[0_0_5px_rgba(39,166,68,0.9)]"
+          />
         </button>
       )}
     </div>

@@ -339,7 +339,7 @@ export function ConsoleDevice({
             aria-valuemax={items.length}
             aria-valuenow={index + 1}
             aria-valuetext={items[index].label}
-            className="absolute top-1/2 -right-8 size-14 -translate-y-1/2 cursor-grab touch-none rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mist active:cursor-grabbing"
+            className="absolute top-1/2 -right-8 size-14 cursor-grab touch-none rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mist active:cursor-grabbing"
             style={{ transform: "translateY(-50%) translateZ(18px)" }}
           >
             <div
@@ -498,7 +498,7 @@ function FaceButton({
       aria-label={title}
       onClick={onPress}
       className={cn(
-        "grid size-9 place-items-center rounded-full text-meta font-[590] text-mist",
+        "grid size-9 place-items-center rounded-full text-xs font-[590] text-mist",
         "bg-[radial-gradient(circle_at_35%_30%,#3a3d42_0%,#232529_55%,#17181b_100%)]",
         "shadow-[0_3px_0_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.12)_inset]",
         "transition-transform duration-75 active:translate-y-[3px] active:shadow-[0_0_0_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.08)_inset]",

@@ -23,11 +23,13 @@ import {
   BadgeCheck,
   Newspaper,
   Sparkles,
+  Gamepad2,
   CornerDownLeft,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { switchTargetRole } from "@/app/app/actions"
+import { CONSOLE_SUMMON_EVENT } from "@/components/shell/console-dock"
 import { cn } from "@/lib/utils"
 
 /**
@@ -99,6 +101,17 @@ export function CommandPalette({
 
   const commands = useMemo<Command[]>(
     () => [
+      {
+        id: "console",
+        title: "Open the console",
+        description: "Navigate with the D-pad, A/B and the crank",
+        category: "Go to" as const,
+        icon: <Gamepad2 className="size-4" />,
+        action: () => {
+          setOpen(false)
+          window.dispatchEvent(new CustomEvent(CONSOLE_SUMMON_EVENT))
+        },
+      },
       ...SCREENS.map(([href, title, description, icon]) => ({
         id: href,
         title,
