@@ -6,6 +6,7 @@ import { isClerkConfigured } from "@/lib/auth-config"
 import { listRoles } from "@/lib/students"
 import { Toaster } from "@/components/ui/sonner"
 import { CommandPalette } from "@/components/shell/command-palette"
+import { ConsoleDock } from "@/components/shell/console-dock"
 import { Container } from "@/components/shell/section"
 import { Wordmark } from "@/components/shell/logo"
 import { SetupNotice } from "@/components/shell/setup-notice"
@@ -60,7 +61,9 @@ export default async function AppLayout({ children }: LayoutProps<"/app">) {
         <main className="flex-1 py-8">
           <Container>{children}</Container>
         </main>
-        <Toaster position="bottom-right" />
+        <ConsoleDock />
+        {/* Toasts sit above the dock's corner; keep them clear of the device. */}
+        <Toaster position="bottom-left" />
       </div>
     </ClerkProvider>
   )
