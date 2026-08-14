@@ -78,7 +78,7 @@ export default function LandingPage() {
       <main className="flex flex-col gap-24 pb-24">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section className="pt-16">
-          <Container className="flex flex-col items-center gap-10">
+          <Container className="flex flex-col items-center gap-14">
             {/* The console leads. Its boot menu is the same two doors as the
                 CTAs below — upload, or ask the mentor what this is. A faint
                 radial glow stages it against the void; pr-10 balances the
@@ -123,7 +123,7 @@ export default function LandingPage() {
           </Container>
 
           {/* Product frame on the atmospheric floor */}
-          <Container className="relative mt-12" id="measure">
+          <Container className="relative mt-28" id="measure">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-x-2 bottom-[-40px] h-[70%] rounded-xl bg-linear-to-b from-transparent from-10% to-mist/10"
