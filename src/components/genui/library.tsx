@@ -6,6 +6,7 @@ import { z } from "zod/v4"
 import { GapGauge } from "@/components/viz/gap-gauge"
 import { SubCard } from "@/components/shell/frame"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 /**
  * The SkillForge OpenUI Lang library.
@@ -164,50 +165,139 @@ function safeHttps(raw: string): string | null {
   }
 }
 
+/**
+ * One picture, with the streaming behaviour OpenUI's own `ImageBlock` has.
+ *
+ * `alt` comes first and `url` is optional because arguments arrive positionally
+ * as the model streams: alt lands first, so the tile can claim its space and
+ * show a skeleton immediately, then swap in the picture when the URL follows.
+ * Ordering url-first meant every image popped in late and shoved the layout
+ * down under it.
+ */
+function Tile({
+  alt,
+  url,
+  caption,
+  href,
+  className,
+}: {
+  alt: string
+  url?: string
+  caption?: string
+  href?: string
+  className?: string
+}) {
+  const src = url ? safeHttps(url) : null
+  const link = href ? safeHttps(href) : null
+
+  const figure = (
+    <figure className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <div className="aspect-video w-full overflow-hidden rounded-md bg-white/[0.03] shadow-subtle">
+        {src ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- remote hosts
+             are unknown at build time, so next/image's allowlist cannot cover
+             them. */
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            // Don't leak which SkillForge screen the student is on to the host.
+            referrerPolicy="no-referrer"
+            className="size-full object-cover"
+          />
+        ) : (
+          // Still streaming, or the URL was unusable. Either way this holds the
+          // space — an empty frame reads as "no picture", a broken-image icon
+          // reads as "this product is broken".
+          <div className="size-full animate-pulse bg-white/[0.02]" />
+        )}
+      </div>
+      {caption ? (
+        <figcaption className="text-xs text-ash">{caption}</figcaption>
+      ) : null}
+    </figure>
+  )
+
+  return link ? (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer nofollow"
+      className="min-w-0 transition-opacity hover:opacity-90"
+    >
+      {figure}
+    </a>
+  ) : (
+    figure
+  )
+}
+
 const Media = defineComponent({
   name: "Image",
   description:
-    "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists.",
+    "A single thumbnail or screenshot. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists.",
   props: z.object({
-    url: z.string().describe("Image URL from preview_link's `image` field"),
     alt: z.string().describe("What the image shows"),
+    url: z.string().optional().describe("The `image` field from preview_link"),
     caption: z.string().optional(),
     href: z.string().optional().describe("Page the image links to"),
   }),
-  component: ({ props }) => {
-    const src = safeHttps(props.url)
-    // A bad URL renders nothing rather than a broken-image icon: an empty slot
-    // reads as "no picture", a broken one reads as "this product is broken".
-    if (!src) return null
+  component: ({ props }) => (
+    <Tile
+      alt={props.alt}
+      url={props.url}
+      caption={props.caption}
+      href={props.href}
+      className="max-w-lg"
+    />
+  ),
+})
 
-    const figure = (
-      <figure className="flex flex-col gap-1.5">
-        {/* eslint-disable-next-line @next/next/no-img-element -- remote hosts are
-            unknown at build time, so next/image's allowlist cannot cover them. */}
-        <img
-          src={src}
-          alt={props.alt}
-          loading="lazy"
-          decoding="async"
-          // Don't leak which SkillForge screen the student is on to the host.
-          referrerPolicy="no-referrer"
-          className="max-h-72 w-full rounded-md object-cover shadow-subtle"
-        />
-        {props.caption ? (
-          <figcaption className="text-xs text-ash">{props.caption}</figcaption>
-        ) : null}
-      </figure>
-    )
+const galleryItem = z.object({
+  alt: z.string(),
+  url: z.string().optional().describe("The `image` field from preview_link"),
+  caption: z.string().optional().describe("Short label under the tile"),
+  href: z.string().optional().describe("Page this tile opens"),
+})
 
-    const href = props.href ? safeHttps(props.href) : null
-    return href ? (
-      <a href={href} target="_blank" rel="noopener noreferrer nofollow">
-        {figure}
-      </a>
-    ) : (
-      figure
-    )
-  },
+const Gallery = defineComponent({
+  name: "Gallery",
+  description:
+    "A responsive grid of thumbnails. Use when comparing several options side by side — three courses, four reference projects. Every url must come from the same preview_link call; skip any entry whose preview had no image rather than substituting one.",
+  props: z.object({
+    items: z.array(galleryItem).min(2).max(6),
+  }),
+  component: ({ props }) => (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {props.items.map((item, i) => (
+        <Tile key={i} {...item} />
+      ))}
+    </div>
+  ),
+})
+
+const Carousel = defineComponent({
+  name: "Carousel",
+  description:
+    "A horizontally scrollable strip of thumbnails. Prefer Gallery for comparison; use this when order matters, such as a sequence of steps or a ranked shortlist.",
+  props: z.object({
+    items: z.array(galleryItem).min(2).max(6),
+  }),
+  component: ({ props }) => (
+    <div
+      className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2"
+      // Horizontal scroll needs to be reachable by keyboard, and a scroll
+      // container is only focusable if it is told to be.
+      tabIndex={0}
+      role="group"
+      aria-label="Scrollable image strip"
+    >
+      {props.items.map((item, i) => (
+        <Tile key={i} {...item} className="w-56 shrink-0 snap-start" />
+      ))}
+    </div>
+  ),
 })
 
 const Embed = defineComponent({
@@ -270,6 +360,8 @@ const Answer = defineComponent({
         Resource.ref,
         Steps.ref,
         Media.ref,
+        Gallery.ref,
+        Carousel.ref,
         Embed.ref,
       ])
     ),
@@ -281,5 +373,16 @@ const Answer = defineComponent({
 
 export const skillforgeLibrary = createLibrary({
   root: "Answer",
-  components: [Answer, Text, Gauge, Stat, Resource, Steps, Media, Embed],
+  components: [
+    Answer,
+    Text,
+    Gauge,
+    Stat,
+    Resource,
+    Steps,
+    Media,
+    Gallery,
+    Carousel,
+    Embed,
+  ],
 })

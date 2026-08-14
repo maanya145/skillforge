@@ -11,7 +11,7 @@ import {
   searchRepositories,
   searchDiscussions,
 } from "@/lib/lookup"
-import { fetchLinkPreview } from "@/lib/preview"
+import { fetchLinkPreviews } from "@/lib/preview"
 import { nextRung } from "@/lib/scoring/level"
 import type { LevelRubric } from "@/lib/scoring/types"
 
@@ -379,43 +379,39 @@ export function createMentorTools(studentId: string) {
   const preview = createTool({
     id: "preview_link",
     description:
-      "Read a public page's own Open Graph metadata: title, description, thumbnail image, and whether it is an embeddable YouTube or Vimeo video. Use this before showing an Image or Embed for a link, so the media you render is what the page actually advertises rather than a guess. Only call it with a URL another tool returned.",
+      "Read public pages' own Open Graph metadata: title, description, thumbnail image, and whether each is an embeddable YouTube or Vimeo video. Pass every URL you intend to show media for in ONE call — a gallery of four costs the same as one. Required before any Image, Gallery, Carousel or Embed, so the media you render is what the page actually advertises rather than a guess. Only pass URLs another tool returned. Pages that cannot be read are simply absent from the result.",
     inputSchema: z.object({
-      url: z.string().describe("An https URL returned by an earlier tool call"),
+      urls: z
+        .array(z.string())
+        .min(1)
+        .max(6)
+        .describe("https URLs returned by earlier tool calls"),
     }),
     outputSchema: z.object({
-      found: z.boolean(),
-      url: z.string().nullable(),
-      title: z.string().nullable(),
-      description: z.string().nullable(),
-      image: z.string().nullable(),
-      siteName: z.string().nullable(),
-      videoProvider: z.string().nullable(),
-      videoId: z.string().nullable(),
+      previews: z.array(
+        z.object({
+          url: z.string(),
+          title: z.string().nullable(),
+          description: z.string().nullable(),
+          image: z.string().nullable(),
+          siteName: z.string().nullable(),
+          videoProvider: z.string().nullable(),
+          videoId: z.string().nullable(),
+        })
+      ),
     }),
-    execute: async ({ url }) => {
-      const result = await fetchLinkPreview(url)
-      if (!result) {
-        return {
-          found: false,
-          url: null,
-          title: null,
-          description: null,
-          image: null,
-          siteName: null,
-          videoProvider: null,
-          videoId: null,
-        }
-      }
+    execute: async ({ urls }) => {
+      const results = await fetchLinkPreviews(urls)
       return {
-        found: true,
-        url: result.url,
-        title: result.title,
-        description: result.description,
-        image: result.image,
-        siteName: result.siteName,
-        videoProvider: result.video?.provider ?? null,
-        videoId: result.video?.id ?? null,
+        previews: results.map((r) => ({
+          url: r.url,
+          title: r.title,
+          description: r.description,
+          image: r.image,
+          siteName: r.siteName,
+          videoProvider: r.video?.provider ?? null,
+          videoId: r.video?.id ?? null,
+        })),
       }
     },
   })

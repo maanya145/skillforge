@@ -72,13 +72,15 @@ if (/\b(Gauge|Stat|Text|Resource|Steps)\([a-zA-Z_]+\s*:/.test(answer)) {
 
 // Media must be grounded: an Image or Embed without a preview_link call means
 // the URL was invented, which is exactly what this component set exists to stop.
-const usesMedia = /\b(Image|Embed)\(/.test(answer)
+const usesMedia = /\b(Image|Gallery|Carousel|Embed)\(/.test(answer)
 if (usesMedia && !tools.includes("preview_link")) {
-  problems.push("rendered Image/Embed without calling preview_link — invented media")
+  problems.push("rendered media without calling preview_link — invented URLs")
 }
 
 const components = [
-  ...answer.matchAll(/\b(Text|Gauge|Stat|Resource|Steps|Image|Embed)\(/g),
+  ...answer.matchAll(
+    /\b(Text|Gauge|Stat|Resource|Steps|Image|Gallery|Carousel|Embed)\(/g
+  ),
 ]
 console.log(`blocks   ${components.length} component calls${usesMedia ? " (incl. media)" : ""}`)
 

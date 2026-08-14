@@ -2,7 +2,7 @@
   "root": "Answer",
   "components": {
     "Answer": {
-      "signature": "Answer(blocks: (Text | Gauge | Stat | Resource | Steps | Image | Embed)[])",
+      "signature": "Answer(blocks: (Text | Gauge | Stat | Resource | Steps | Image | Gallery | Carousel | Embed)[])",
       "description": "The root container. Holds an ordered sequence of blocks that together answer the student's question."
     },
     "Text": {
@@ -26,8 +26,16 @@
       "description": "An ordered list of concrete next actions. Each item should be something the student could start today."
     },
     "Image": {
-      "signature": "Image(url: string, alt: string, caption?: string, href?: string)",
-      "description": "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+      "signature": "Image(alt: string, url?: string, caption?: string, href?: string)",
+      "description": "A single thumbnail or screenshot. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+    },
+    "Gallery": {
+      "signature": "Gallery(items: {alt: string, url?: string, caption?: string, href?: string}[])",
+      "description": "A responsive grid of thumbnails. Use when comparing several options side by side — three courses, four reference projects. Every url must come from the same preview_link call; skip any entry whose preview had no image rather than substituting one."
+    },
+    "Carousel": {
+      "signature": "Carousel(items: {alt: string, url?: string, caption?: string, href?: string}[])",
+      "description": "A horizontally scrollable strip of thumbnails. Prefer Gallery for comparison; use this when order matters, such as a sequence of steps or a ranked shortlist."
     },
     "Embed": {
       "signature": "Embed(provider: \"youtube\" | \"vimeo\", videoId: string, title: string)",
@@ -59,6 +67,12 @@
       "Image": {
         "$ref": "#/$defs/Image"
       },
+      "Gallery": {
+        "$ref": "#/$defs/Gallery"
+      },
+      "Carousel": {
+        "$ref": "#/$defs/Carousel"
+      },
       "Embed": {
         "$ref": "#/$defs/Embed"
       }
@@ -71,6 +85,8 @@
       "Resource",
       "Steps",
       "Image",
+      "Gallery",
+      "Carousel",
       "Embed"
     ],
     "additionalProperties": false,
@@ -99,6 +115,12 @@
                 },
                 {
                   "$ref": "#/$defs/Image"
+                },
+                {
+                  "$ref": "#/$defs/Gallery"
+                },
+                {
+                  "$ref": "#/$defs/Carousel"
                 },
                 {
                   "$ref": "#/$defs/Embed"
@@ -229,10 +251,10 @@
       "Image": {
         "type": "object",
         "properties": {
-          "url": {
+          "alt": {
             "type": "string"
           },
-          "alt": {
+          "url": {
             "type": "string"
           },
           "caption": {
@@ -243,11 +265,82 @@
           }
         },
         "required": [
-          "url",
           "alt"
         ],
         "additionalProperties": false,
-        "description": "A thumbnail or screenshot for a link. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+        "description": "A single thumbnail or screenshot. Only use an image URL returned by preview_link — never construct one, and never use an image you have not verified exists."
+      },
+      "Gallery": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 2,
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "alt": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "caption": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "alt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "description": "A responsive grid of thumbnails. Use when comparing several options side by side — three courses, four reference projects. Every url must come from the same preview_link call; skip any entry whose preview had no image rather than substituting one."
+      },
+      "Carousel": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 2,
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "alt": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "caption": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "alt"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "description": "A horizontally scrollable strip of thumbnails. Prefer Gallery for comparison; use this when order matters, such as a sequence of steps or a ranked shortlist."
       },
       "Embed": {
         "type": "object",

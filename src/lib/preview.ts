@@ -148,6 +148,27 @@ export async function fetchLinkPreview(
   }
 }
 
+/** Concurrency cap: polite to the hosts, and bounds the worst-case latency. */
+const MAX_BATCH = 6
+
+/**
+ * Previews for several URLs at once.
+ *
+ * A gallery of four tiles fetched serially would be four round trips deep;
+ * done together it costs roughly one. Failures are per-URL — one dead host
+ * drops its own tile and leaves the rest of the gallery intact.
+ */
+export async function fetchLinkPreviews(
+  urls: string[]
+): Promise<LinkPreview[]> {
+  const unique = [...new Set(urls.map((u) => u.trim()).filter(Boolean))].slice(
+    0,
+    MAX_BATCH
+  )
+  const results = await Promise.all(unique.map((u) => fetchLinkPreview(u)))
+  return results.filter((r): r is LinkPreview => r !== null)
+}
+
 /** A video we can embed even though the page itself would not load. */
 function bare(url: URL, video: NonNullable<LinkPreview["video"]>): LinkPreview {
   return {
