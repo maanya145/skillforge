@@ -80,6 +80,19 @@ reply. Provenance, not vibes.
 
 ## Hard questions, honest answers
 
+**"Why wouldn't I just paste my resume into ChatGPT?"**
+Ask it twice and you get two different numbers — an unreproducible score
+isn't a measurement. It rates you against nothing in particular; there's no
+bar to read or disagree with. It's tuned to be encouraging. And its answer
+to "why?" is a rationalization written *after* the number, not the cause of
+it. SkillForge uses the model only for what models are reliably good at —
+reading the document — and computes the judgment: same resume, same
+benchmark, same number, every time, with the ruler public at `/benchmarks`.
+Concede the flip side out loud: for rewriting bullets or cover letters, a
+chatbot is genuinely better. This is an instrument, not an editor.
+*One-liner: "You can ask an AI what it thinks of your resume. You can't ask
+it to measure."*
+
 **"Isn't the AI just making these numbers up?"**
 No — it never produces one. Show `/benchmarks`. The model reports what the
 resume contains; the score is a weighted sum you can recompute by hand.
