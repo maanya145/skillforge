@@ -22,7 +22,7 @@ export default async function UnderstandPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <SectionHead eyebrow="Generative UI" title="Understand">
+      <SectionHead eyebrow="Study aid" title="Understand">
         Paste the thing that isn&rsquo;t clicking — a function, lecture notes,
         a stack trace — and get it back as interface: the control flow as a
         diagram, the trade-offs as a table, the jargon defined, the one
