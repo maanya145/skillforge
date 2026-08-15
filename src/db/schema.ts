@@ -614,6 +614,47 @@ export const discoveredResources = pgTable(
   ]
 )
 
+// ─── Job targets ─────────────────────────────────────────────────────────────
+
+/**
+ * A pasted job posting, mapped onto the track vocabulary.
+ *
+ * The model's entire contribution is `mappings` — which tracks the posting
+ * treats as core or mentions, each citing the JD line (verified before
+ * persisting, exactly like resume flags). Levels are never stored per target:
+ * the benchmark is derived at read time from the seeded rows + these mappings,
+ * so a benchmark improvement retroactively improves every saved target.
+ *
+ * Works without an analysis: a target with no cached evidence still shows what
+ * the posting demands; measurement switches on once a resume exists.
+ */
+export const jobTargets = pgTable(
+  "job_targets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    company: text("company"),
+    /** Nearest seeded role — the baseline the derivation modulates. */
+    baseRoleId: text("base_role_id")
+      .notNull()
+      .references(() => roles.id),
+    /** The posting, pseudo-paged like pasted resumes so citations verify. */
+    sourceText: text("source_text").notNull(),
+    mappings: jsonb("mappings")
+      .$type<
+        { trackId: string; emphasis: "core" | "mentioned"; line: number; quote: string }[]
+      >()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("job_targets_student_idx").on(t.studentId, t.createdAt)]
+)
+
 // ─── Sharing ─────────────────────────────────────────────────────────────────
 
 /**

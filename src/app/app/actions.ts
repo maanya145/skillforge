@@ -8,6 +8,7 @@ import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
 import { getShareForRun, newShareToken } from "@/lib/shares"
 import { discoverForRun } from "@/lib/discovery/discover"
+import { createJobTarget, deleteJobTarget, JdError } from "@/lib/jd/target"
 import { replanRole } from "@/lib/replan"
 import { readinessScore, perTrackReadiness } from "@/lib/scoring/readiness"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -381,6 +382,34 @@ export async function refreshDiscoveries(): Promise<ActionSummary> {
     console.error("[discovery] refresh failed:", err)
     return { ok: false, message: "The search failed. Try again in a moment." }
   }
+}
+
+// ─── Job targets ─────────────────────────────────────────────────────────────
+
+/** Paste a posting → mapped, cited, saved. The one model call happens here. */
+export async function addJobTarget(formData: FormData): Promise<ActionSummary> {
+  const student = await ensureStudent()
+  const text = String(formData.get("posting") ?? "")
+
+  try {
+    await createJobTarget(student.id, text)
+    revalidatePath("/app/jobs")
+    return { ok: true, message: "Posting mapped — every requirement cites its line." }
+  } catch (err) {
+    if (err instanceof JdError) return { ok: false, message: err.message }
+    console.error("[jd] mapping failed:", err)
+    return {
+      ok: false,
+      message: "Couldn't map that posting — the model service may be busy. Try again.",
+    }
+  }
+}
+
+export async function removeJobTarget(targetId: string): Promise<ActionSummary> {
+  const student = await ensureStudent()
+  await deleteJobTarget(student.id, targetId)
+  revalidatePath("/app/jobs")
+  return { ok: true, message: "Target removed." }
 }
 
 // ─── Sharing ─────────────────────────────────────────────────────────────────

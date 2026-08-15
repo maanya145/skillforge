@@ -5,6 +5,7 @@ import {
   Dumbbell,
   FileText,
   Gauge,
+  Crosshair,
   MessageCircle,
   Newspaper,
   Settings,
@@ -32,6 +33,7 @@ export type SidebarItem = {
 export const WORKSPACE_NAV: SidebarItem[] = [
   { href: "/app/intake", label: "Intake", icon: FileText },
   { href: "/app/map", label: "Skill map", icon: Gauge },
+  { href: "/app/jobs", label: "Job targets", icon: Crosshair },
   { href: "/app/roadmap", label: "Roadmap", icon: CalendarRange },
   { href: "/app/practice", label: "Practice", icon: Dumbbell },
   { href: "/app/certifications", label: "Certifications", icon: BadgeCheck },

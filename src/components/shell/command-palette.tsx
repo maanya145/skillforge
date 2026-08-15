@@ -13,6 +13,7 @@ import {
   Search,
   FileText,
   Gauge,
+  Crosshair,
   CalendarRange,
   Dumbbell,
   TrendingUp,
@@ -54,6 +55,7 @@ const SPRING_IN = { type: "spring", stiffness: 260, damping: 22 } as const
 const SCREENS: [string, string, string, React.ReactNode][] = [
   ["/app/intake", "Intake", "Upload and analyse a resume", <FileText key="i" className="size-4" />],
   ["/app/map", "Skill map", "Gauges, gaps and the role comparison", <Gauge key="m" className="size-4" />],
+  ["/app/jobs", "Job targets", "Measure yourself against a real job posting", <Crosshair key="j" className="size-4" />],
   ["/app/roadmap", "Roadmap", "The 14-week plan, three lanes", <CalendarRange key="r" className="size-4" />],
   ["/app/practice", "Practice", "Ranked projects, certs and questions", <Dumbbell key="p" className="size-4" />],
   ["/app/progress", "Progress", "Readiness trend and what moved it", <TrendingUp key="g" className="size-4" />],

@@ -1,0 +1,25 @@
+Backend Engineer (Campus) — Zylker Payments
+Bengaluru · Full-time · 0–2 years
+
+About the team
+Our payments core processes settlement files for 40,000 merchants nightly.
+You will join the six-engineer platform pod that owns ingestion, ledger
+writes and reconciliation.
+
+What you will do
+- Design and ship Go services that handle concurrent settlement streams
+- Own PostgreSQL schemas for the ledger; write and review complex SQL
+- Build and maintain CI/CD pipelines; every service ships in a container
+- Load-test new endpoints and reason about caching and back-pressure
+- Debug production incidents across a distributed system
+
+What we look for
+- Strong fundamentals in data structures and algorithms
+- Hands-on Docker experience; Kubernetes exposure is a plus
+- Solid grasp of REST API design and versioning
+- Tests are not optional here: unit and integration coverage on every PR
+- Comfort on a Linux shell — logs, processes, network tools
+
+Nice to have
+- Exposure to observability stacks (metrics, tracing)
+- Security basics: auth flows, secrets handling
