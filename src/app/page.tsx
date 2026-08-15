@@ -92,11 +92,6 @@ export default function LandingPage() {
             </div>
 
             <div className="flex max-w-[760px] flex-col items-center gap-6 text-center">
-              <Badge variant="tag" className="rounded-full px-3 py-1">
-                <BadgeDot />
-                Built for campus placement season
-              </Badge>
-
               <h1 className="text-heading">
                 Measure the gap. Then close it.
               </h1>
