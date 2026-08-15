@@ -17,7 +17,6 @@ export type ProblemRow = {
   difficulty: 1 | 2 | 3
   isGapTrack: boolean
   solvedAt: string | null
-  via: "manual" | "leetcode" | null
   pattern: string | null
   acRate: number | null
 }
@@ -116,12 +115,6 @@ export function ProblemList({ problems }: { problems: ProblemRow[] }) {
                   {p.isGapTrack ? <BadgeDot /> : null}
                   {p.trackName}
                 </Badge>
-                {solved && p.via === "leetcode" ? (
-                  <Badge variant="ok">
-                    <BadgeDot />
-                    verified
-                  </Badge>
-                ) : null}
                 <span className="truncate text-xs text-ash">
                   {p.pattern ?? (p.acRate !== null ? `${p.acRate}% accepted` : "")}
                 </span>

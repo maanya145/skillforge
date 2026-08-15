@@ -7,7 +7,6 @@ import { getRecommendations } from "@/lib/plan-queries"
 import { getDiscoveries } from "@/lib/discovery/discover"
 import { getProblemBoard } from "@/lib/practice-problems"
 import { ProblemList } from "./problem-list"
-import { LeetcodeConnect } from "./leetcode-connect"
 import { getCertInputs } from "@/lib/cert-artifact"
 import { rankCerts, type CertVerdict } from "@/lib/ranking/rank"
 import { ArrowRight } from "lucide-react"
@@ -135,32 +134,6 @@ export default async function PracticePage() {
                 >
                   LeetCode drills
                 </AppHeading>
-                <div className="mb-3 flex flex-col gap-2">
-                  <LeetcodeConnect connected={board.leetcode} />
-                  {board.recentSolves.length > 0 ? (
-                    <SubCard>
-                      <span className="t-micro">
-                        Recently solved on LeetCode — verified
-                      </span>
-                      <div className="mt-2 flex flex-col gap-1">
-                        {board.recentSolves.map((r) => (
-                          <a
-                            key={r.slug}
-                            href={r.url}
-                            target="_blank"
-                            rel="noopener noreferrer nofollow"
-                            className="flex items-baseline justify-between gap-3 text-xs transition-colors hover:text-paper"
-                          >
-                            <span className="truncate text-mist">{r.title}</span>
-                            <span className="font-mono whitespace-nowrap text-ash">
-                              {r.solvedAt.toISOString().slice(0, 10)}
-                            </span>
-                          </a>
-                        ))}
-                      </div>
-                    </SubCard>
-                  ) : null}
-                </div>
                 <ProblemList
                   problems={board.problems.map((p) => ({
                     id: p.id,
@@ -172,13 +145,11 @@ export default async function PracticePage() {
                     acRate: p.acRate,
                     isGapTrack: p.isGapTrack,
                     solvedAt: p.solvedAt ? p.solvedAt.toISOString() : null,
-                    via: p.via,
                   }))}
                 />
                 <p className="mt-2 border-t border-graphite px-1 pt-2 text-xs text-ash">
                   Real problems, hand-mapped to your tracks and ranked by your
-                  open gaps. A connected LeetCode account verifies solves from
-                  your accepted submissions &mdash; and either way, readiness
+                  open gaps. Solving builds the habit trail &mdash; readiness
                   moves only when a gap closes.
                 </p>
               </div>

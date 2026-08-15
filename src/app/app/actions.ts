@@ -9,11 +9,6 @@ import { getLatestRun } from "@/lib/analysis"
 import { getShareForRun, newShareToken } from "@/lib/shares"
 import { discoverForRun } from "@/lib/discovery/discover"
 import { createJobTarget, deleteJobTarget, JdError } from "@/lib/jd/target"
-import {
-  fetchLeetcodeTotals,
-  syncLeetcodeSolves,
-  validUsername,
-} from "@/lib/leetcode"
 import { replanRole } from "@/lib/replan"
 import { readinessScore, perTrackReadiness } from "@/lib/scoring/readiness"
 import type { GapResult } from "@/lib/scoring/gap"
@@ -389,52 +384,6 @@ export async function refreshDiscoveries(): Promise<ActionSummary> {
   }
 }
 
-// ─── LeetCode account ────────────────────────────────────────────────────────
-
-/** Connect a LeetCode handle: verify it exists, save it, sync immediately. */
-export async function connectLeetcode(formData: FormData): Promise<ActionSummary> {
-  const student = await ensureStudent()
-  const username = String(formData.get("username") ?? "").trim()
-
-  if (!validUsername(username)) {
-    return { ok: false, message: "That doesn't look like a LeetCode username." }
-  }
-  const totals = await fetchLeetcodeTotals(username)
-  if (!totals) {
-    return {
-      ok: false,
-      message: `No LeetCode account called “${username}” — check the spelling.`,
-    }
-  }
-
-  await db
-    .update(schema.students)
-    .set({ leetcodeUsername: username })
-    .where(eq(schema.students.id, student.id))
-
-  const verified = await syncLeetcodeSolves(student.id, username)
-  revalidatePath("/app/practice")
-  revalidatePath("/app/progress")
-  return {
-    ok: true,
-    message:
-      verified > 0
-        ? `Connected — ${verified} drill${verified === 1 ? "" : "s"} verified from your recent submissions.`
-        : `Connected as ${username}. Recent accepted submissions will verify drills automatically.`,
-  }
-}
-
-/** Disconnect. Verified marks stay — the submissions happened. */
-export async function disconnectLeetcode(): Promise<ActionSummary> {
-  const student = await ensureStudent()
-  await db
-    .update(schema.students)
-    .set({ leetcodeUsername: null })
-    .where(eq(schema.students.id, student.id))
-  revalidatePath("/app/practice")
-  return { ok: true, message: "LeetCode disconnected. Verified solves are kept." }
-}
-
 // ─── Drill problems ──────────────────────────────────────────────────────────
 
 /**
@@ -473,12 +422,6 @@ export async function toggleProblemSolved(
     )
 
   if (existing) {
-    if (existing.via === "leetcode") {
-      return {
-        ok: false,
-        message: "That solve was verified from your LeetCode account — it stays.",
-      }
-    }
     // Un-mark: remove the attempt and its habit-trail event together.
     await db
       .delete(schema.problemAttempts)
