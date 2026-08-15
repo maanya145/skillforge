@@ -135,8 +135,31 @@ export default async function PracticePage() {
                 >
                   LeetCode drills
                 </AppHeading>
-                <div className="mb-3">
+                <div className="mb-3 flex flex-col gap-2">
                   <LeetcodeConnect connected={board.leetcode} />
+                  {board.recentSolves.length > 0 ? (
+                    <SubCard>
+                      <span className="t-micro">
+                        Recently solved on LeetCode — verified
+                      </span>
+                      <div className="mt-2 flex flex-col gap-1">
+                        {board.recentSolves.map((r) => (
+                          <a
+                            key={r.slug}
+                            href={r.url}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow"
+                            className="flex items-baseline justify-between gap-3 text-xs transition-colors hover:text-paper"
+                          >
+                            <span className="truncate text-mist">{r.title}</span>
+                            <span className="font-mono whitespace-nowrap text-ash">
+                              {r.solvedAt.toISOString().slice(0, 10)}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </SubCard>
+                  ) : null}
                 </div>
                 <ProblemList
                   problems={board.problems.map((p) => ({
@@ -146,6 +169,7 @@ export default async function PracticePage() {
                     trackName: p.trackName,
                     difficulty: p.difficulty,
                     pattern: p.pattern,
+                    acRate: p.acRate,
                     isGapTrack: p.isGapTrack,
                     solvedAt: p.solvedAt ? p.solvedAt.toISOString() : null,
                     via: p.via,

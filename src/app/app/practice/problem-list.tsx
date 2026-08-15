@@ -15,10 +15,11 @@ export type ProblemRow = {
   url: string
   trackName: string
   difficulty: 1 | 2 | 3
-  pattern: string
   isGapTrack: boolean
   solvedAt: string | null
   via: "manual" | "leetcode" | null
+  pattern: string | null
+  acRate: number | null
 }
 
 const DIFFICULTY = {
@@ -47,7 +48,7 @@ export function ProblemList({ problems }: { problems: ProblemRow[] }) {
   function toggle(problem: ProblemRow) {
     setPendingId(problem.id)
     startTransition(async () => {
-      const result = await toggleProblemSolved(problem.id)
+      const result = await toggleProblemSolved(problem.id, problem.title)
       if (result.ok) toast.success(result.message)
       else toast.error(result.message)
       setPendingId(null)
@@ -121,7 +122,9 @@ export function ProblemList({ problems }: { problems: ProblemRow[] }) {
                     verified
                   </Badge>
                 ) : null}
-                <span className="truncate text-xs text-ash">{p.pattern}</span>
+                <span className="truncate text-xs text-ash">
+                  {p.pattern ?? (p.acRate !== null ? `${p.acRate}% accepted` : "")}
+                </span>
               </div>
             </div>
           </div>

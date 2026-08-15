@@ -83,22 +83,72 @@ export async function fetchLeetcodeTotals(
   }
 }
 
-/** The most recent accepted submissions — slugs and when. */
+/** The most recent accepted submissions — slugs, titles and when. */
 export async function fetchRecentAccepted(
   username: string
-): Promise<{ slug: string; solvedAt: Date }[]> {
+): Promise<{ slug: string; title: string; solvedAt: Date }[]> {
   if (!validUsername(username)) return []
   const data = await gql<{
     data?: {
-      recentAcSubmissionList: { titleSlug: string; timestamp: string }[] | null
+      recentAcSubmissionList:
+        | { titleSlug: string; title: string; timestamp: string }[]
+        | null
     }
   }>(
-    `query{recentAcSubmissionList(username:"${username}",limit:20){titleSlug timestamp}}`
+    `query{recentAcSubmissionList(username:"${username}",limit:20){titleSlug title timestamp}}`
   )
   return (data?.data?.recentAcSubmissionList ?? []).map((s) => ({
     slug: s.titleSlug,
+    title: s.title,
     solvedAt: new Date(Number(s.timestamp) * 1000),
   }))
+}
+
+export type TagProblem = {
+  slug: string
+  title: string
+  difficulty: 1 | 2 | 3
+  /** LeetCode's global acceptance rate, 0–100. */
+  acRate: number
+}
+
+const DIFF_NUM: Record<string, 1 | 2 | 3> = { Easy: 1, Medium: 2, Hard: 3 }
+
+/**
+ * Free problems for a LeetCode topic tag — how the drill pool grows past the
+ * curated rows. LC's default ordering is by problem number, which correlates
+ * with how canonical a problem is; we take the front of that list rather than
+ * inventing our own popularity metric.
+ */
+export async function fetchProblemsByTag(
+  tag: string,
+  limit = 30
+): Promise<TagProblem[]> {
+  if (!/^[a-z0-9-]{2,40}$/.test(tag)) return []
+  const data = await gql<{
+    data?: {
+      list: {
+        data: {
+          title: string
+          titleSlug: string
+          difficulty: string
+          acRate: number
+          isPaidOnly: boolean
+        }[]
+      } | null
+    }
+  }>(
+    `query{list:questionList(categorySlug:"",limit:${Math.min(limit * 2, 100)},skip:0,filters:{tags:["${tag}"]}){data{title titleSlug difficulty acRate isPaidOnly}}}`
+  )
+  return (data?.data?.list?.data ?? [])
+    .filter((q) => !q.isPaidOnly && DIFF_NUM[q.difficulty])
+    .slice(0, limit)
+    .map((q) => ({
+      slug: q.titleSlug,
+      title: q.title,
+      difficulty: DIFF_NUM[q.difficulty],
+      acRate: Math.round(q.acRate),
+    }))
 }
 
 /**
@@ -113,12 +163,13 @@ export async function syncLeetcodeSolves(
   const recent = await fetchRecentAccepted(username)
   if (recent.length === 0) return 0
 
+  // EVERY accepted submission is recorded — the visible history the totals
+  // number only hints at. Progress-feed events stay reserved for catalog
+  // drills, so connecting an active account doesn't flood the feed.
   const catalog = await db
-    .select({ id: schema.problemCatalog.id, title: schema.problemCatalog.title })
+    .select({ id: schema.problemCatalog.id })
     .from(schema.problemCatalog)
-  const titles = new Map(catalog.map((c) => [c.id, c.title]))
-  const matches = recent.filter((r) => titles.has(r.slug))
-  if (matches.length === 0) return 0
+  const curated = new Set(catalog.map((c) => c.id))
 
   const existing = await db
     .select()
@@ -127,7 +178,7 @@ export async function syncLeetcodeSolves(
   const byProblem = new Map(existing.map((a) => [a.problemId, a]))
 
   let newlyVerified = 0
-  for (const m of matches) {
+  for (const m of recent) {
     const current = byProblem.get(m.slug)
     if (current?.via === "leetcode") continue
 
@@ -135,31 +186,35 @@ export async function syncLeetcodeSolves(
       // Manual mark upgrades to verified; the timestamp becomes LC's.
       await db
         .update(schema.problemAttempts)
-        .set({ via: "leetcode", solvedAt: m.solvedAt })
+        .set({ via: "leetcode", solvedAt: m.solvedAt, title: m.title })
         .where(
           and(
             eq(schema.problemAttempts.studentId, studentId),
             eq(schema.problemAttempts.problemId, m.slug)
           )
         )
+      newlyVerified++
       continue
     }
 
     await db.insert(schema.problemAttempts).values({
       studentId,
       problemId: m.slug,
+      title: m.title,
       solvedAt: m.solvedAt,
       via: "leetcode",
     })
-    await db.insert(schema.progressEvents).values({
-      studentId,
-      type: "problem_solved",
-      levelDelta: 0,
-      headline: `Solved ${titles.get(m.slug)} on LeetCode — verified.`,
-      body: "Pulled from your connected account. Drills build the habit trail; only closed gaps move readiness.",
-      metadata: { problemId: m.slug, via: "leetcode" },
-    })
     newlyVerified++
+    if (curated.has(m.slug)) {
+      await db.insert(schema.progressEvents).values({
+        studentId,
+        type: "problem_solved",
+        levelDelta: 0,
+        headline: `Solved ${m.title} on LeetCode — verified.`,
+        body: "Pulled from your connected account. Drills build the habit trail; only closed gaps move readiness.",
+        metadata: { problemId: m.slug, via: "leetcode" },
+      })
+    }
   }
   return newlyVerified
 }

@@ -7,6 +7,7 @@
  */
 import {
   fetchLeetcodeTotals,
+  fetchProblemsByTag,
   fetchRecentAccepted,
   validUsername,
 } from "@/lib/leetcode"
@@ -29,6 +30,13 @@ assert(recent.length > 0, `recent accepted list (${recent.length} entries)`)
 assert(
   recent.every((r) => r.slug.length > 0 && r.solvedAt.getTime() > 1_500_000_000_000),
   "every entry has a slug and a sane timestamp"
+)
+
+const pool = await fetchProblemsByTag("dynamic-programming", 20)
+assert(pool.length >= 15, `tag pool (${pool.length} free DP problems)`)
+assert(
+  pool.every((p) => /^[a-z0-9-]+$/.test(p.slug) && p.acRate > 0 && p.acRate <= 100),
+  "pool entries have sane slugs and acceptance rates"
 )
 
 assert((await fetchLeetcodeTotals("no-such-user-zzz-999")) === null, "unknown user → null")

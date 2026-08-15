@@ -639,16 +639,23 @@ export const problemCatalog = pgTable("problem_catalog", {
   pattern: text("pattern").notNull(),
 })
 
-/** Solved marks. Habit trail only — solving drills never moves readiness. */
+/**
+ * Solved marks. Habit trail only — solving drills never moves readiness.
+ *
+ * `problemId` is a LeetCode slug and deliberately NOT a foreign key into the
+ * catalog: the drill pool is pulled live by topic tag well beyond the curated
+ * rows, and a connected account records every recent accepted submission —
+ * the catalog is a curation, not the universe.
+ */
 export const problemAttempts = pgTable(
   "problem_attempts",
   {
     studentId: uuid("student_id")
       .notNull()
       .references(() => students.id, { onDelete: "cascade" }),
-    problemId: text("problem_id")
-      .notNull()
-      .references(() => problemCatalog.id),
+    problemId: text("problem_id").notNull(),
+    /** Display title, captured at mark time — slugs are ugly. */
+    title: text("title"),
     solvedAt: timestamp("solved_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

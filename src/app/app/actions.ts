@@ -442,15 +442,25 @@ export async function disconnectLeetcode(): Promise<ActionSummary> {
  * so, and the arithmetic enforces it: no readiness value is touched.
  */
 export async function toggleProblemSolved(
-  problemId: string
+  problemId: string,
+  /** Display title for pool problems the catalog doesn't know. */
+  titleHint?: string
 ): Promise<ActionSummary> {
   const student = await ensureStudent()
 
-  const [problem] = await db
+  // Slugs are attacker-supplied and become URLs and event text.
+  if (!/^[a-z0-9-]{1,80}$/.test(problemId)) {
+    return { ok: false, message: "That problem id doesn't look right." }
+  }
+  const [catalogRow] = await db
     .select({ title: schema.problemCatalog.title })
     .from(schema.problemCatalog)
     .where(eq(schema.problemCatalog.id, problemId))
-  if (!problem) return { ok: false, message: "That problem isn't in the catalog." }
+  const problem = {
+    title:
+      catalogRow?.title ??
+      (titleHint ?? problemId.replace(/-/g, " ")).slice(0, 120),
+  }
 
   const [existing] = await db
     .select()
@@ -494,7 +504,7 @@ export async function toggleProblemSolved(
 
   await db
     .insert(schema.problemAttempts)
-    .values({ studentId: student.id, problemId })
+    .values({ studentId: student.id, problemId, title: problem.title })
   await db.insert(schema.progressEvents).values({
     studentId: student.id,
     type: "problem_solved",

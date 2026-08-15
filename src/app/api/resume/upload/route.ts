@@ -201,19 +201,19 @@ export async function POST(request: NextRequest) {
           { status: 422 }
         )
       }
-      // The OCR service takes PDFs, not raw images: wrap the photo into a
-      // one-page PDF losslessly — embedded bytes, page sized to the image.
-      const wrapped = await wrapImageAsPdf(bytes, imageMime)
-      parsed = await ocrResume(wrapped, file.name.replace(/\.\w+$/, ".pdf"))
-      if (!parsed) {
-        return Response.json(
-          {
-            error:
-              "Couldn't read that photo — try a sharper, straight-on shot, or paste the text.",
-          },
-          { status: 422 }
-        )
-      }
+      // OCR is seconds of third-party latency the student should spend
+      // watching the checklist, not a spinner on the upload button — so the
+      // photo path defers everything: the run is created now, and wrap → OCR
+      // → analysis all happen in after(), with failures marked on the run.
+      return deferredImageIntake({
+        student,
+        roleId,
+        bytes,
+        imageMime,
+        fileName: file.name || "resume-photo",
+        fileSize: file.size,
+        contentHash,
+      })
     } else {
       try {
         parsed = await extractResume(bytes)
@@ -326,48 +326,7 @@ export async function POST(request: NextRequest) {
   }
 
   // The analysis outlives this response; `after()` keeps the function alive.
-  after(async () => {
-    try {
-      const workflowRun = await mastra
-        .getWorkflow("analyzeResumeWorkflow")
-        .createRun()
-
-      await db
-        .update(schema.analysisRuns)
-        .set({ workflowRunId: workflowRun.runId, status: "running" })
-        .where(eq(schema.analysisRuns.id, run.id))
-
-      const result = await workflowRun.start({
-        inputData: {
-          runId: run.id,
-          studentId: student.id,
-          resumeId: resume.id,
-          roleId,
-          weeklyHours: student.weeklyHours,
-        },
-      })
-
-      if (result.status !== "success") {
-        throw new Error(
-          result.status === "failed"
-            ? String(result.error ?? "failed")
-            : `ended as ${result.status}`
-        )
-      }
-    } catch (err) {
-      // Raw internal messages ("Run `npm run db:seed`") must never reach a
-      // student; log the cause, store something actionable.
-      console.error("[upload] analysis failed:", err)
-      await db
-        .update(schema.analysisRuns)
-        .set({
-          status: "failed",
-          error: friendlyFailure(err),
-          finishedAt: new Date(),
-        })
-        .where(eq(schema.analysisRuns.id, run.id))
-    }
-  })
+  after(() => runAnalysis(run.id, student, resume.id, roleId))
 
   return Response.json({
     runId: run.id,
@@ -378,5 +337,147 @@ export async function POST(request: NextRequest) {
     // The student should know their scan went through OCR — it is why the
     // citations below will not line up with the pages they can see.
     ocr: source === "ocr",
+  })
+}
+
+/** Start the workflow for a run and translate failures for the student. */
+async function runAnalysis(
+  runId: string,
+  student: { id: string; weeklyHours: number },
+  resumeId: string,
+  roleId: string
+) {
+  try {
+    const workflowRun = await mastra.getWorkflow("analyzeResumeWorkflow").createRun()
+
+    await db
+      .update(schema.analysisRuns)
+      .set({ workflowRunId: workflowRun.runId, status: "running" })
+      .where(eq(schema.analysisRuns.id, runId))
+
+    const result = await workflowRun.start({
+      inputData: {
+        runId,
+        studentId: student.id,
+        resumeId,
+        roleId,
+        weeklyHours: student.weeklyHours,
+      },
+    })
+
+    if (result.status !== "success") {
+      throw new Error(
+        result.status === "failed"
+          ? String(result.error ?? "failed")
+          : `ended as ${result.status}`
+      )
+    }
+  } catch (err) {
+    // Raw internal messages ("Run `npm run db:seed`") must never reach a
+    // student; log the cause, store something actionable.
+    console.error("[upload] analysis failed:", err)
+    await db
+      .update(schema.analysisRuns)
+      .set({ status: "failed", error: friendlyFailure(err), finishedAt: new Date() })
+      .where(eq(schema.analysisRuns.id, runId))
+  }
+}
+
+/**
+ * The photo path: respond immediately, do the slow parts in after().
+ *
+ * The resume row is created with empty text and filled in once OCR returns —
+ * `rawText` is NOT NULL by design, and an empty string under a queued run is
+ * honest: nothing has been read yet. Failures mark the run failed with a
+ * message the intake screen already knows how to show.
+ */
+async function deferredImageIntake({
+  student,
+  roleId,
+  bytes,
+  imageMime,
+  fileName,
+  fileSize,
+  contentHash,
+}: {
+  student: { id: string; weeklyHours: number }
+  roleId: string
+  bytes: Uint8Array
+  imageMime: "image/png" | "image/jpeg"
+  fileName: string
+  fileSize: number
+  contentHash: string
+}) {
+  const [resume] = await db
+    .insert(schema.resumes)
+    .values({
+      studentId: student.id,
+      fileName,
+      fileSize,
+      pageCount: 0,
+      rawText: "",
+      pagesText: [],
+      contentHash,
+      parseMs: 0,
+      sectionsFound: 0,
+    })
+    .returning()
+
+  const [run] = await db
+    .insert(schema.analysisRuns)
+    .values({
+      studentId: student.id,
+      resumeId: resume.id,
+      roleId,
+      status: "queued",
+      progress: [
+        { key: "ocr", label: "Reading your photo", value: "OCR in progress" },
+      ],
+    })
+    .returning()
+
+  after(async () => {
+    try {
+      const wrapped = await wrapImageAsPdf(bytes, imageMime)
+      const parsed = await ocrResume(wrapped, fileName.replace(/\.\w+$/, ".pdf"))
+      if (!parsed) {
+        await db
+          .update(schema.analysisRuns)
+          .set({
+            status: "failed",
+            error:
+              "Couldn't read that photo — try a sharper, straight-on shot, or paste the text.",
+            finishedAt: new Date(),
+          })
+          .where(eq(schema.analysisRuns.id, run.id))
+        return
+      }
+      await db
+        .update(schema.resumes)
+        .set({
+          rawText: parsed.rawText,
+          pagesText: parsed.pagesText,
+          pageCount: parsed.pageCount,
+          parseMs: parsed.parseMs,
+          sectionsFound: parsed.pagesText.length,
+        })
+        .where(eq(schema.resumes.id, resume.id))
+      await runAnalysis(run.id, student, resume.id, roleId)
+    } catch (err) {
+      console.error("[upload] deferred photo intake failed:", err)
+      await db
+        .update(schema.analysisRuns)
+        .set({ status: "failed", error: friendlyFailure(err), finishedAt: new Date() })
+        .where(eq(schema.analysisRuns.id, run.id))
+    }
+  })
+
+  return Response.json({
+    runId: run.id,
+    resumeId: resume.id,
+    pageCount: 0,
+    parseMs: 0,
+    cached: false,
+    ocr: true,
   })
 }
