@@ -24,6 +24,7 @@ import {
   BadgeCheck,
   Newspaper,
   Sparkles,
+  Lightbulb,
   Gamepad2,
   CornerDownLeft,
 } from "lucide-react"
@@ -63,6 +64,7 @@ const SCREENS: [string, string, string, React.ReactNode][] = [
   ["/app/feed", "Feed", "Engineering news ranked against your open gaps", <Newspaper key="n" className="size-4" />],
   ["/app/certifications", "Certifications", "Weigh certifications against your budget", <BadgeCheck key="v" className="size-4" />],
   ["/app/studio", "Studio", "Ask a question, get an interface back", <Sparkles key="u" className="size-4" />],
+  ["/app/understand", "Understand", "Paste notes or code, get a visual explanation", <Lightbulb key="l" className="size-4" />],
   ["/app/settings", "Settings", "Role, hours and profile", <Settings key="s" className="size-4" />],
   ["/benchmarks", "Benchmarks", "The published rubric every level is scored against", <BookOpen key="b" className="size-4" />],
 ]

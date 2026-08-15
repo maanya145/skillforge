@@ -1,0 +1,304 @@
+{
+  "root": "Answer",
+  "components": {
+    "Answer": {
+      "signature": "Answer(blocks: (Text | Callout | Code | Flow | Table | Terms | Steps | Stat)[])",
+      "description": "The root container: an ordered sequence of blocks that together explain the material."
+    },
+    "Text": {
+      "signature": "Text(content: string)",
+      "description": "A short paragraph of plain prose. Use between visual blocks to carry the narrative."
+    },
+    "Callout": {
+      "signature": "Callout(tone: \"insight\" | \"warning\", content: string)",
+      "description": "The one thing the reader should not miss. tone 'insight' for the key idea, 'warning' for a pitfall or bug."
+    },
+    "Code": {
+      "signature": "Code(title?: string, language?: string, code: string)",
+      "description": "A code block, quoted from the material or a minimal corrected/illustrative version of it. Keep it short — quote the lines that matter, not the whole file."
+    },
+    "Flow": {
+      "signature": "Flow(title?: string, nodes: string[])",
+      "description": "A left-to-right chain of stages with arrows — for control flow, data flow, a pipeline, a lifecycle. 3 to 7 short node labels."
+    },
+    "Table": {
+      "signature": "Table(headers: string[], rows: string[][])",
+      "description": "A compact comparison or reference table. Use when the material contrasts things — options, cases, complexities. Max 5 columns."
+    },
+    "Terms": {
+      "signature": "Terms(items: {term: string, definition: string}[])",
+      "description": "Definitions for the jargon the material assumes. Only terms that actually appear in it."
+    },
+    "Steps": {
+      "signature": "Steps(items: string[])",
+      "description": "An ordered walkthrough — what happens first, then, then. For tracing execution or a procedure in the notes."
+    },
+    "Stat": {
+      "signature": "Stat(label: string, value: string, caption?: string)",
+      "description": "One labelled figure the material states or directly implies — a complexity, a count, a limit. Never invent one."
+    }
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "Answer": {
+        "$ref": "#/$defs/Answer"
+      },
+      "Text": {
+        "$ref": "#/$defs/Text"
+      },
+      "Callout": {
+        "$ref": "#/$defs/Callout"
+      },
+      "Code": {
+        "$ref": "#/$defs/Code"
+      },
+      "Flow": {
+        "$ref": "#/$defs/Flow"
+      },
+      "Table": {
+        "$ref": "#/$defs/Table"
+      },
+      "Terms": {
+        "$ref": "#/$defs/Terms"
+      },
+      "Steps": {
+        "$ref": "#/$defs/Steps"
+      },
+      "Stat": {
+        "$ref": "#/$defs/Stat"
+      }
+    },
+    "required": [
+      "Answer",
+      "Text",
+      "Callout",
+      "Code",
+      "Flow",
+      "Table",
+      "Terms",
+      "Steps",
+      "Stat"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "blocks": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "$ref": "#/$defs/Callout"
+                },
+                {
+                  "$ref": "#/$defs/Code"
+                },
+                {
+                  "$ref": "#/$defs/Flow"
+                },
+                {
+                  "$ref": "#/$defs/Table"
+                },
+                {
+                  "$ref": "#/$defs/Terms"
+                },
+                {
+                  "$ref": "#/$defs/Steps"
+                },
+                {
+                  "$ref": "#/$defs/Stat"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "blocks"
+        ],
+        "additionalProperties": false,
+        "description": "The root container: an ordered sequence of blocks that together explain the material."
+      },
+      "Text": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false,
+        "description": "A short paragraph of plain prose. Use between visual blocks to carry the narrative."
+      },
+      "Callout": {
+        "type": "object",
+        "properties": {
+          "tone": {
+            "type": "string",
+            "enum": [
+              "insight",
+              "warning"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tone",
+          "content"
+        ],
+        "additionalProperties": false,
+        "description": "The one thing the reader should not miss. tone 'insight' for the key idea, 'warning' for a pitfall or bug."
+      },
+      "Code": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "additionalProperties": false,
+        "description": "A code block, quoted from the material or a minimal corrected/illustrative version of it. Keep it short — quote the lines that matter, not the whole file."
+      },
+      "Flow": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "nodes": {
+            "minItems": 2,
+            "maxItems": 7,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 40
+            }
+          }
+        },
+        "required": [
+          "nodes"
+        ],
+        "additionalProperties": false,
+        "description": "A left-to-right chain of stages with arrows — for control flow, data flow, a pipeline, a lifecycle. 3 to 7 short node labels."
+      },
+      "Table": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "minItems": 2,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "headers",
+          "rows"
+        ],
+        "additionalProperties": false,
+        "description": "A compact comparison or reference table. Use when the material contrasts things — options, cases, complexities. Max 5 columns."
+      },
+      "Terms": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "term": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "definition": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "term",
+                "definition"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "description": "Definitions for the jargon the material assumes. Only terms that actually appear in it."
+      },
+      "Steps": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 2,
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "description": "An ordered walkthrough — what happens first, then, then. For tracing execution or a procedure in the notes."
+      },
+      "Stat": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "additionalProperties": false,
+        "description": "One labelled figure the material states or directly implies — a complexity, a count, a limit. Never invent one."
+      }
+    }
+  }
+}

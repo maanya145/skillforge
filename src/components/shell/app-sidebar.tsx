@@ -10,6 +10,7 @@ import {
   Newspaper,
   Settings,
   Sparkles,
+  Lightbulb,
   TrendingUp,
   type LucideIcon,
 } from "lucide-react"
@@ -41,6 +42,7 @@ export const WORKSPACE_NAV: SidebarItem[] = [
   { href: "/app/feed", label: "Feed", icon: Newspaper },
   { href: "/app/chat", label: "Mentor", icon: MessageCircle },
   { href: "/app/studio", label: "Studio", icon: Sparkles },
+  { href: "/app/understand", label: "Understand", icon: Lightbulb },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ]
 
