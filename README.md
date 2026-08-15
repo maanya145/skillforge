@@ -6,7 +6,8 @@ actually chasing, and returns the shortest honest path to placement-ready.
 Next.js 16 · Mastra · OpenCode Zen (DeepSeek v4) · Neon Postgres + Drizzle ·
 Clerk · Tailwind v4 + shadcn/ui
 
-**Setup: [docs/SETUP.md](docs/SETUP.md)** · Design system:
+**Setup: [docs/SETUP.md](docs/SETUP.md)** · Tech stack:
+[TECHSTACK.md](TECHSTACK.md) · Design system:
 [docs/DESIGN.md](docs/DESIGN.md) · Visual spec:
 [docs/mockup.html](docs/mockup.html)
 
