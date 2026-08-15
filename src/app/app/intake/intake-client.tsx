@@ -24,7 +24,7 @@ export type RunState = {
 /** Workflow step ids are internal; students see what is happening to them. */
 const STEP_LABEL: Record<string, string> = {
   "load-context": "Reading your resume",
-  extract: "Finding the evidence",
+  extract: "Extracting evidence — the slow step",
   score: "Scoring against the benchmark",
   plan: "Building your plan",
   persist: "Saving",
@@ -56,6 +56,7 @@ export function IntakeClient({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [run, setRun] = useState<RunState | null>(initialRun)
+  const [elapsed, setElapsed] = useState(0)
   const [mode, setMode] = useState<"file" | "paste">("file")
   const [pastedText, setPastedText] = useState("")
 
@@ -69,6 +70,7 @@ export function IntakeClient({
 
     const timer = setInterval(async () => {
       ticks++
+      setElapsed(ticks)
       if (ticks > POLL_LIMIT) {
         clearInterval(timer)
         setRun((r) =>
@@ -395,7 +397,16 @@ export function IntakeClient({
             {active ? (
               <li className="flex items-center gap-2 font-mono text-xs text-ash">
                 <span className="animate-pulse">•</span>
-                Reading your resume — this can take a minute or two
+                <span>
+                  {/* Parsing the PDF takes ~100ms; the minutes belong to the
+                      free-tier model call. Say so, and show the clock — an
+                      unlabelled wait reads as something being broken. */}
+                  The model is reading your evidence — the free tier can take
+                  several minutes
+                </span>
+                <span className="ml-auto tabular">
+                  {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+                </span>
               </li>
             ) : null}
           </ul>
