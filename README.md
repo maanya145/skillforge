@@ -7,7 +7,8 @@ Next.js 16 · Mastra · OpenCode Zen (keyless free tier) · Neon Postgres + Driz
 Clerk · Tailwind v4 + shadcn/ui
 
 **Setup: [docs/SETUP.md](docs/SETUP.md)** · Tech stack:
-[TECHSTACK.md](TECHSTACK.md) · Design system:
+[TECHSTACK.md](TECHSTACK.md) · Presenting: [docs/AGENT.md](docs/AGENT.md) ·
+Design system:
 [docs/DESIGN.md](docs/DESIGN.md) · Visual spec:
 [docs/mockup.html](docs/mockup.html)
 
