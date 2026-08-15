@@ -32,8 +32,7 @@
     "check:studio": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-studio.mts",
     "check:feed": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-feed.mts",
     "check:greeter": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-greeter.mts",
-    "check:jd": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-jd.mts",
-    "check:jobs": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-jobs.mts"
+    "check:jd": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-jd.mts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.4",
