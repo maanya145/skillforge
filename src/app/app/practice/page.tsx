@@ -5,6 +5,8 @@ import { ensureStudent } from "@/lib/students"
 import { getLatestRun } from "@/lib/analysis"
 import { getRecommendations } from "@/lib/plan-queries"
 import { getDiscoveries } from "@/lib/discovery/discover"
+import { getProblemBoard } from "@/lib/practice-problems"
+import { ProblemList } from "./problem-list"
 import { getCertInputs } from "@/lib/cert-artifact"
 import { rankCerts, type CertVerdict } from "@/lib/ranking/rank"
 import { ArrowRight } from "lucide-react"
@@ -34,6 +36,7 @@ export default async function PracticePage() {
   const recs = run ? await getRecommendations(run.id) : null
 
   const discoveries = run ? await getDiscoveries(student.id, run.id) : []
+  const board = await getProblemBoard(student.id)
   // The preview is scored server-side at the default (no budget), so the card
   // is meaningful before any JavaScript runs.
   const certInputs = run ? await getCertInputs(run.id) : null
@@ -126,6 +129,31 @@ export default async function PracticePage() {
             </div>
 
             <div className="flex flex-col gap-4">
+              <div>
+                <AppHeading
+                  aside={`${board.solvedCount} solved · ${board.gapTrackCount} on gap tracks`}
+                >
+                  LeetCode drills
+                </AppHeading>
+                <ProblemList
+                  problems={board.problems.map((p) => ({
+                    id: p.id,
+                    title: p.title,
+                    url: p.url,
+                    trackName: p.trackName,
+                    difficulty: p.difficulty,
+                    pattern: p.pattern,
+                    isGapTrack: p.isGapTrack,
+                    solvedAt: p.solvedAt ? p.solvedAt.toISOString() : null,
+                  }))}
+                />
+                <p className="mt-2 border-t border-graphite px-1 pt-2 text-xs text-ash">
+                  Real problems, hand-mapped to your tracks and ranked by your
+                  open gaps. Solving builds the habit trail &mdash; readiness
+                  moves only when a gap closes.
+                </p>
+              </div>
+
               <div>
                 <AppHeading aside="patterns, not transcripts">
                   Interview drill

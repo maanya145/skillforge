@@ -56,6 +56,7 @@ export const eventType = pgEnum("event_type", [
   "item_completed",
   "project_shipped",
   "question_attempted",
+  "problem_solved",
   "mock_interview",
   "resume_reupload",
   "role_changed",
@@ -612,6 +613,44 @@ export const discoveredResources = pgTable(
     uniqueIndex("discovered_student_url_uidx").on(t.studentId, t.url),
     index("discovered_run_idx").on(t.runId, t.rank),
   ]
+)
+
+// ─── Drill problems ──────────────────────────────────────────────────────────
+
+/**
+ * Real LeetCode problems, seeded and hand-mapped to tracks — the same closed-
+ * catalog discipline as projects and certs. Every slug is verified against
+ * LeetCode's GraphQL API by `npm run check:problems`, including that it is
+ * not paywalled.
+ */
+export const problemCatalog = pgTable("problem_catalog", {
+  /** The LeetCode slug — the id IS the URL. */
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  trackId: text("track_id")
+    .notNull()
+    .references(() => skillTracks.id),
+  /** 1 easy · 2 medium · 3 hard, matching LeetCode's own labels. */
+  difficulty: integer("difficulty").notNull(),
+  /** Why this one: the pattern it drills, e.g. "BFS on a grid". */
+  pattern: text("pattern").notNull(),
+})
+
+/** Solved marks. Habit trail only — solving drills never moves readiness. */
+export const problemAttempts = pgTable(
+  "problem_attempts",
+  {
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    problemId: text("problem_id")
+      .notNull()
+      .references(() => problemCatalog.id),
+    solvedAt: timestamp("solved_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.studentId, t.problemId] })]
 )
 
 // ─── Job targets ─────────────────────────────────────────────────────────────

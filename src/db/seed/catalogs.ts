@@ -241,3 +241,51 @@ export const QUESTION_BANK = QUESTION_BANK_RAW.map((q) => ({
   ...q,
   modelAnswerOutline: ANSWER_OUTLINES[q.id] ?? null,
 }))
+
+/**
+ * LeetCode drills, hand-mapped to tracks. The id is the LeetCode slug — the
+ * URL is derived, never stored. `npm run check:problems` verifies every slug
+ * against LeetCode's GraphQL API: it exists, its difficulty matches, and it
+ * is not paywalled.
+ */
+export const PROBLEM_CATALOG = [
+  // ── DSA — graphs & DP ──────────────────────────────────────────────────
+  { id: "number-of-islands", title: "Number of Islands", trackId: "dsa", difficulty: 2, pattern: "BFS/DFS on a grid" },
+  { id: "course-schedule", title: "Course Schedule", trackId: "dsa", difficulty: 2, pattern: "cycle detection / topological sort" },
+  { id: "clone-graph", title: "Clone Graph", trackId: "dsa", difficulty: 2, pattern: "graph traversal with a visited map" },
+  { id: "rotting-oranges", title: "Rotting Oranges", trackId: "dsa", difficulty: 2, pattern: "multi-source BFS" },
+  { id: "word-ladder", title: "Word Ladder", trackId: "dsa", difficulty: 3, pattern: "implicit graph BFS" },
+  { id: "pacific-atlantic-water-flow", title: "Pacific Atlantic Water Flow", trackId: "dsa", difficulty: 2, pattern: "reverse flood fill" },
+  { id: "climbing-stairs", title: "Climbing Stairs", trackId: "dsa", difficulty: 1, pattern: "1-D DP, the hello world" },
+  { id: "house-robber", title: "House Robber", trackId: "dsa", difficulty: 2, pattern: "1-D DP with a skip choice" },
+  { id: "coin-change", title: "Coin Change", trackId: "dsa", difficulty: 2, pattern: "unbounded knapsack" },
+  { id: "longest-increasing-subsequence", title: "Longest Increasing Subsequence", trackId: "dsa", difficulty: 2, pattern: "DP with binary-search upgrade" },
+  { id: "unique-paths", title: "Unique Paths", trackId: "dsa", difficulty: 2, pattern: "2-D DP on a grid" },
+  { id: "partition-equal-subset-sum", title: "Partition Equal Subset Sum", trackId: "dsa", difficulty: 2, pattern: "0/1 knapsack" },
+  { id: "edit-distance", title: "Edit Distance", trackId: "dsa", difficulty: 2, pattern: "2-D DP over two strings" },
+
+  // ── Concurrency ────────────────────────────────────────────────────────
+  { id: "print-in-order", title: "Print in Order", trackId: "concurrency", difficulty: 1, pattern: "signalling between threads" },
+  { id: "print-foobar-alternately", title: "Print FooBar Alternately", trackId: "concurrency", difficulty: 2, pattern: "two-thread handoff" },
+  { id: "building-h2o", title: "Building H2O", trackId: "concurrency", difficulty: 2, pattern: "barriers and semaphores" },
+  { id: "fizz-buzz-multithreaded", title: "Fizz Buzz Multithreaded", trackId: "concurrency", difficulty: 2, pattern: "four threads, one counter" },
+  { id: "the-dining-philosophers", title: "The Dining Philosophers", trackId: "concurrency", difficulty: 2, pattern: "deadlock avoidance" },
+
+  // ── SQL & data modelling ───────────────────────────────────────────────
+  { id: "combine-two-tables", title: "Combine Two Tables", trackId: "sql-modelling", difficulty: 1, pattern: "LEFT JOIN semantics" },
+  { id: "second-highest-salary", title: "Second Highest Salary", trackId: "sql-modelling", difficulty: 2, pattern: "subquery vs OFFSET" },
+  { id: "department-highest-salary", title: "Department Highest Salary", trackId: "sql-modelling", difficulty: 2, pattern: "JOIN + per-group max" },
+  { id: "consecutive-numbers", title: "Consecutive Numbers", trackId: "sql-modelling", difficulty: 2, pattern: "self-join / window functions" },
+  { id: "exchange-seats", title: "Exchange Seats", trackId: "sql-modelling", difficulty: 2, pattern: "CASE on row parity" },
+  { id: "trips-and-users", title: "Trips and Users", trackId: "sql-modelling", difficulty: 3, pattern: "multi-join with filtering and rates" },
+
+  // ── Caching ────────────────────────────────────────────────────────────
+  { id: "lru-cache", title: "LRU Cache", trackId: "caching", difficulty: 2, pattern: "hash map + doubly linked list" },
+  { id: "lfu-cache", title: "LFU Cache", trackId: "caching", difficulty: 3, pattern: "frequency buckets" },
+  { id: "time-based-key-value-store", title: "Time Based Key-Value Store", trackId: "caching", difficulty: 2, pattern: "versioned reads, binary search" },
+
+  // ── System design (build-it-small) ─────────────────────────────────────
+  { id: "design-twitter", title: "Design Twitter", trackId: "system-design", difficulty: 2, pattern: "fan-out on read, merged feeds" },
+  { id: "insert-delete-getrandom-o1", title: "Insert Delete GetRandom O(1)", trackId: "system-design", difficulty: 2, pattern: "structure composition for O(1)" },
+  { id: "design-underground-system", title: "Design Underground System", trackId: "system-design", difficulty: 2, pattern: "aggregate state design" },
+]

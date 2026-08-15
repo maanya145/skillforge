@@ -28,7 +28,7 @@ import {
   BENCHMARK_SOURCE,
   BENCHMARK_VERSION,
 } from "./role-benchmarks"
-import { PROJECT_CATALOG, CERT_CATALOG, QUESTION_BANK } from "./catalogs"
+import { PROJECT_CATALOG, CERT_CATALOG, QUESTION_BANK, PROBLEM_CATALOG } from "./catalogs"
 
 // Neon publishes AAAA records; on a network without IPv6 egress every
 // connection dies with EHOSTUNREACH before reaching Postgres.
@@ -141,6 +141,20 @@ async function main() {
       },
     })
   console.log(`cert catalog         ${CERT_CATALOG.length}`)
+
+  await db
+    .insert(schema.problemCatalog)
+    .values(PROBLEM_CATALOG)
+    .onConflictDoUpdate({
+      target: schema.problemCatalog.id,
+      set: {
+        title: sql`excluded.title`,
+        trackId: sql`excluded.track_id`,
+        difficulty: sql`excluded.difficulty`,
+        pattern: sql`excluded.pattern`,
+      },
+    })
+  console.log(`problem catalog      ${PROBLEM_CATALOG.length}`)
 
   await db
     .insert(schema.questionBank)

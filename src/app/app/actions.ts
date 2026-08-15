@@ -384,6 +384,74 @@ export async function refreshDiscoveries(): Promise<ActionSummary> {
   }
 }
 
+// ─── Drill problems ──────────────────────────────────────────────────────────
+
+/**
+ * Toggle a LeetCode drill solved/unsolved. Habit trail only — the copy says
+ * so, and the arithmetic enforces it: no readiness value is touched.
+ */
+export async function toggleProblemSolved(
+  problemId: string
+): Promise<ActionSummary> {
+  const student = await ensureStudent()
+
+  const [problem] = await db
+    .select({ title: schema.problemCatalog.title })
+    .from(schema.problemCatalog)
+    .where(eq(schema.problemCatalog.id, problemId))
+  if (!problem) return { ok: false, message: "That problem isn't in the catalog." }
+
+  const [existing] = await db
+    .select()
+    .from(schema.problemAttempts)
+    .where(
+      and(
+        eq(schema.problemAttempts.studentId, student.id),
+        eq(schema.problemAttempts.problemId, problemId)
+      )
+    )
+
+  if (existing) {
+    // Un-mark: remove the attempt and its habit-trail event together.
+    await db
+      .delete(schema.problemAttempts)
+      .where(
+        and(
+          eq(schema.problemAttempts.studentId, student.id),
+          eq(schema.problemAttempts.problemId, problemId)
+        )
+      )
+    const events = await db
+      .select({ id: schema.progressEvents.id, metadata: schema.progressEvents.metadata })
+      .from(schema.progressEvents)
+      .where(eq(schema.progressEvents.studentId, student.id))
+    const match = events.find(
+      (e) => (e.metadata as { problemId?: string } | null)?.problemId === problemId
+    )
+    if (match) {
+      await db.delete(schema.progressEvents).where(eq(schema.progressEvents.id, match.id))
+    }
+    revalidatePath("/app/practice")
+    return { ok: true, message: `Unmarked ${problem.title}.` }
+  }
+
+  await db
+    .insert(schema.problemAttempts)
+    .values({ studentId: student.id, problemId })
+  await db.insert(schema.progressEvents).values({
+    studentId: student.id,
+    type: "problem_solved",
+    levelDelta: 0,
+    headline: `Solved ${problem.title} on LeetCode.`,
+    body: "Drills build the habit trail; only closed gaps move readiness.",
+    metadata: { problemId },
+  })
+
+  revalidatePath("/app/practice")
+  revalidatePath("/app/progress")
+  return { ok: true, message: `${problem.title} marked solved.` }
+}
+
 // ─── Job targets ─────────────────────────────────────────────────────────────
 
 /** Paste a posting → mapped, cited, saved. The one model call happens here. */
