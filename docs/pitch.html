@@ -64,6 +64,20 @@
   td{color:var(--fog)} td b{color:var(--paper);font-weight:590}
   td.bad{color:var(--ash)} td.good{color:var(--mist)}
 
+  /* product slide */
+  .prod{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;margin-top:40px;align-items:stretch}
+  @media(max-width:900px){.prod{grid-template-columns:1fr}}
+  .prod .stack{display:flex;flex-direction:column;gap:14px}
+  .prod .stack .card{flex:1;padding:16px 20px}
+  .prod .stack .card p{margin-top:5px}
+  .lead{display:flex;flex-direction:column}
+  .lead .gauges{margin-top:18px;display:flex;flex-direction:column;gap:16px;flex:1;justify-content:center}
+  .lead .readout{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--graphite);margin-top:18px;padding-top:14px;font:13px var(--mono);color:var(--ash)}
+  .lead .readout b{color:var(--paper);font-size:17px}
+  .sats{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .sat{display:flex;align-items:baseline;gap:8px;background:var(--carbon);border:1px solid var(--graphite);border-radius:999px;padding:8px 16px;font-size:13.5px;color:var(--fog)}
+  .sat b{color:var(--mist);font-weight:590}
+
   /* pipeline strip */
   .pipe{display:flex;align-items:stretch;gap:0;margin-top:44px;flex-wrap:wrap}
   .pipe .step{flex:1 1 150px;background:var(--carbon);border:1px solid var(--graphite);border-radius:10px;padding:15px 16px;min-width:150px}
@@ -145,13 +159,40 @@
 <section class="slide">
   <div class="eyebrow">The product</div>
   <h2>From one upload: the map, the plan,<br>and something to do this week.</h2>
-  <div class="cols c3">
-    <div class="card"><h3>Skill map</h3><p>12 gauges vs a published bar. Every level explicable to a rubric rung and a resume line.</p></div>
-    <div class="card"><h3>14-week roadmap</h3><p>Three lanes, prerequisite-ordered, packed under the hours the student actually has.</p></div>
-    <div class="card"><h3>Practice</h3><p>Projects, interview drills, and certifications re-scored live against a budget slider.</p></div>
-    <div class="card"><h3>Mentor &amp; Studio</h3><p>A tool-using coach that answers in prose — or in rendered UI: ask for your Docker gap, get the gauge.</p></div>
-    <div class="card"><h3>Feed &amp; discovery</h3><p>Engineering news and web-found courses, ranked by the student's own open gaps.</p></div>
-    <div class="card"><h3>Share &amp; track</h3><p>Read-only recruiter links; readiness that moves only when a gap closes.</p></div>
+
+  <div class="prod">
+    <div class="card lead">
+      <h3>The skill map</h3>
+      <p>Solid is what the resume proves. The notch is what the role demands. The hatch is the work.</p>
+      <div class="gauges">
+        <div class="gauge">
+          <div class="row"><b>System design</b><span>you <b>2.0</b> · role <b>6.0</b> · <span style="color:var(--mist)">7 wks</span></span></div>
+          <div class="track"><span class="have" style="width:20%"></span><span class="gap" style="left:20%;width:40%"></span><span class="notch" style="left:60%"></span></div>
+        </div>
+        <div class="gauge">
+          <div class="row"><b>Docker &amp; CI/CD</b><span>you <b>3.0</b> · role <b>6.0</b> · <span style="color:var(--mist)">3 wks</span></span></div>
+          <div class="track"><span class="have" style="width:30%"></span><span class="gap" style="left:30%;width:30%"></span><span class="notch" style="left:60%"></span></div>
+        </div>
+        <div class="gauge">
+          <div class="row"><b>DSA — graphs &amp; DP</b><span>you <b>6.0</b> · role <b>8.0</b> · <span style="color:var(--mist)">6 wks</span></span></div>
+          <div class="track"><span class="have" style="width:60%"></span><span class="gap" style="left:60%;width:20%"></span><span class="notch" style="left:80%"></span></div>
+        </div>
+      </div>
+      <div class="readout"><span>12 tracks measured · 5 gaps open</span><span>readiness <b>71</b> / 100</span></div>
+    </div>
+
+    <div class="stack">
+      <div class="card"><h3>The plan</h3><p><b style="color:var(--mist)">14 weeks, three lanes</b>, prerequisite-ordered — Docker lands in week 1 <i>because</i> the load test needs it — packed under the hours the student actually has.</p></div>
+      <div class="card"><h3>The practice</h3><p>Projects and interview drills ranked by <b style="color:var(--mist)">weighted gap points</b>; certifications re-scored live in the browser as a budget slider moves.</p></div>
+      <div class="card"><h3>The proof</h3><p>Readiness moves <b style="color:var(--mist)">only when a gap closes</b> — and a read-only link lets a recruiter see the scoreboard, never the resume.</p></div>
+    </div>
+  </div>
+
+  <div class="sats">
+    <span class="sat"><b>Mentor</b> answers in prose, from tools</span>
+    <span class="sat"><b>Studio</b> answers in rendered UI</span>
+    <span class="sat"><b>Feed</b> news ranked by your gaps</span>
+    <span class="sat"><b>Discovery</b> web-found courses, code-scored</span>
   </div>
 </section>
 
