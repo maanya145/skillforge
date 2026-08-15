@@ -1,9 +1,12 @@
 "use client"
 
+import * as React from "react"
 import { defineComponent, createLibrary } from "@openuidev/react-lang"
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react"
 import { z } from "zod/v4"
 
 import { SubCard } from "@/components/shell/frame"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 /**
@@ -222,6 +225,175 @@ const Stat = defineComponent({
   ),
 })
 
+/**
+ * The step-through debugger — the reason this surface exists.
+ *
+ * The model authors the FRAMES (all data, decided once); the stepping is
+ * renderer-local React state, so the student drives the execution with zero
+ * model round-trips. A loop explained as a Trace is an animation the student
+ * controls; the same loop explained as a Table is a textbook page.
+ */
+const Trace = defineComponent({
+  name: "Trace",
+  description:
+    "An interactive step-through of an algorithm or loop. Show the sequence being walked as cells, and one frame per meaningful step: which index is active, which it's compared against, the verdict, and the variables after the step. ALWAYS prefer this over Table for loops, recursion, and pointer algorithms.",
+  props: z.object({
+    title: z.string().optional(),
+    cells: z
+      .array(z.string().max(12))
+      .min(2)
+      .max(16)
+      .describe("The array/sequence being traversed, one label per cell"),
+    frames: z
+      .array(
+        z.object({
+          label: z.string().max(90).describe("e.g. 'i=2 · 2 > 5 → False'"),
+          highlight: z.number().int().min(0).optional().describe("active cell index"),
+          compare: z.number().int().min(0).optional().describe("cell compared against"),
+          verdict: z.enum(["keep", "skip", "note"]).optional(),
+          vars: z
+            .array(z.object({ name: z.string().max(20), value: z.string().max(60) }))
+            .max(4)
+            .optional()
+            .describe("state AFTER this step, e.g. result so far"),
+        })
+      )
+      .min(2)
+      .max(14),
+  }),
+  component: ({ props }) => <TraceView {...props} />,
+})
+
+function TraceView({
+  title,
+  cells,
+  frames,
+}: {
+  title?: string
+  cells: string[]
+  frames: {
+    label: string
+    highlight?: number
+    compare?: number
+    verdict?: "keep" | "skip" | "note"
+    vars?: { name: string; value: string }[]
+  }[]
+}) {
+  const [step, setStep] = React.useState(0)
+  const frame = frames[Math.min(step, frames.length - 1)]
+  const verdict =
+    frame.verdict === "keep"
+      ? { label: "keep", cls: "text-pulse-green" }
+      : frame.verdict === "skip"
+        ? { label: "skip", cls: "text-coral-red" }
+        : null
+
+  return (
+    <div className="rounded-md bg-white/[0.02] p-3 shadow-subtle">
+      <div className="flex items-center justify-between gap-3">
+        <span className="t-micro">{title ?? "Step through it"}</span>
+        <span className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Previous step"
+            disabled={step === 0}
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            className="grid size-6 place-items-center rounded-sm border border-graphite text-fog transition-colors hover:text-mist disabled:opacity-40"
+          >
+            <ChevronLeft className="size-3.5" aria-hidden />
+          </button>
+          <span className="w-12 text-center font-mono text-xs tabular text-ash">
+            {step + 1}/{frames.length}
+          </span>
+          <button
+            type="button"
+            aria-label="Next step"
+            disabled={step >= frames.length - 1}
+            onClick={() => setStep((s) => Math.min(frames.length - 1, s + 1))}
+            className="grid size-6 place-items-center rounded-sm border border-graphite text-fog transition-colors hover:text-mist disabled:opacity-40"
+          >
+            <ChevronRight className="size-3.5" aria-hidden />
+          </button>
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {cells.map((cell, i) => (
+          <span
+            key={i}
+            className={cn(
+              "grid min-w-9 place-items-center rounded-sm px-2 py-1.5 font-mono text-xs transition-colors",
+              i === frame.highlight
+                ? "bg-bone text-void"
+                : i === frame.compare
+                  ? "bg-white/[0.06] text-mist shadow-[inset_0_0_0_1px_var(--color-smoke)]"
+                  : "bg-white/[0.03] text-fog shadow-subtle"
+            )}
+          >
+            {cell}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-3 flex items-baseline gap-2 border-t border-graphite pt-2.5">
+        <span className="font-mono text-xs text-mist">{frame.label}</span>
+        {verdict ? (
+          <span className={cn("font-mono text-xs font-[590]", verdict.cls)}>
+            {verdict.label}
+          </span>
+        ) : null}
+      </div>
+      {frame.vars?.length ? (
+        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+          {frame.vars.map((v) => (
+            <span key={v.name} className="font-mono text-xs text-ash">
+              {v.name} = <span className="text-fog">{v.value}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * Predict-then-check. Reading an answer is passive; committing to a guess
+ * first is what makes it stick. The reveal is local state — no model call.
+ */
+const Reveal = defineComponent({
+  name: "Reveal",
+  description:
+    "A prediction moment: pose a short question the student should answer in their head, hidden answer behind a click. Use once per explanation, at the point where guessing teaches the most — e.g. 'what does this return for [3,5,2]?'",
+  props: z.object({
+    prompt: z.string().max(160),
+    answer: z.string().max(300),
+  }),
+  component: ({ props }) => <RevealView {...props} />,
+})
+
+function RevealView({ prompt, answer }: { prompt: string; answer: string }) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <div className="rounded-md border border-dashed border-smoke p-3">
+      <p className="text-body-sm text-mist">{prompt}</p>
+      {open ? (
+        <p className="mt-2 border-t border-graphite pt-2 text-body-sm text-fog">
+          {answer}
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="mt-2 inline-flex items-center gap-1.5 text-xs text-fog transition-colors hover:text-mist"
+        >
+          <Eye className="size-3.5" aria-hidden />
+          Decide first, then reveal
+        </button>
+      )}
+    </div>
+  )
+}
+
 const Answer = defineComponent({
   name: "Answer",
   description:
@@ -232,6 +404,8 @@ const Answer = defineComponent({
         Text.ref,
         Callout.ref,
         Code.ref,
+        Trace.ref,
+        Reveal.ref,
         Flow.ref,
         DataTable.ref,
         Terms.ref,
@@ -247,5 +421,5 @@ const Answer = defineComponent({
 
 export const explainLibrary = createLibrary({
   root: "Answer",
-  components: [Answer, Text, Callout, Code, Flow, DataTable, Terms, Steps, Stat],
+  components: [Answer, Text, Callout, Code, Trace, Reveal, Flow, DataTable, Terms, Steps, Stat],
 })

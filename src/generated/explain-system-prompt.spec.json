@@ -2,7 +2,7 @@
   "root": "Answer",
   "components": {
     "Answer": {
-      "signature": "Answer(blocks: (Text | Callout | Code | Flow | Table | Terms | Steps | Stat)[])",
+      "signature": "Answer(blocks: (Text | Callout | Code | Trace | Reveal | Flow | Table | Terms | Steps | Stat)[])",
       "description": "The root container: an ordered sequence of blocks that together explain the material."
     },
     "Text": {
@@ -16,6 +16,14 @@
     "Code": {
       "signature": "Code(title?: string, language?: string, code: string)",
       "description": "A code block, quoted from the material or a minimal corrected/illustrative version of it. Keep it short — quote the lines that matter, not the whole file."
+    },
+    "Trace": {
+      "signature": "Trace(title?: string, cells: string[], frames: {label: string, highlight?: number, compare?: number, verdict?: \"keep\" | \"skip\" | \"note\", vars?: {name: string, value: string}[]}[])",
+      "description": "An interactive step-through of an algorithm or loop. Show the sequence being walked as cells, and one frame per meaningful step: which index is active, which it's compared against, the verdict, and the variables after the step. ALWAYS prefer this over Table for loops, recursion, and pointer algorithms."
+    },
+    "Reveal": {
+      "signature": "Reveal(prompt: string, answer: string)",
+      "description": "A prediction moment: pose a short question the student should answer in their head, hidden answer behind a click. Use once per explanation, at the point where guessing teaches the most — e.g. 'what does this return for [3,5,2]?'"
     },
     "Flow": {
       "signature": "Flow(title?: string, nodes: string[])",
@@ -54,6 +62,12 @@
       "Code": {
         "$ref": "#/$defs/Code"
       },
+      "Trace": {
+        "$ref": "#/$defs/Trace"
+      },
+      "Reveal": {
+        "$ref": "#/$defs/Reveal"
+      },
       "Flow": {
         "$ref": "#/$defs/Flow"
       },
@@ -75,6 +89,8 @@
       "Text",
       "Callout",
       "Code",
+      "Trace",
+      "Reveal",
       "Flow",
       "Table",
       "Terms",
@@ -98,6 +114,12 @@
                 },
                 {
                   "$ref": "#/$defs/Code"
+                },
+                {
+                  "$ref": "#/$defs/Trace"
+                },
+                {
+                  "$ref": "#/$defs/Reveal"
                 },
                 {
                   "$ref": "#/$defs/Flow"
@@ -176,6 +198,106 @@
         ],
         "additionalProperties": false,
         "description": "A code block, quoted from the material or a minimal corrected/illustrative version of it. Keep it short — quote the lines that matter, not the whole file."
+      },
+      "Trace": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "cells": {
+            "minItems": 2,
+            "maxItems": 16,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 12
+            }
+          },
+          "frames": {
+            "minItems": 2,
+            "maxItems": 14,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 90
+                },
+                "highlight": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "compare": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "verdict": {
+                  "type": "string",
+                  "enum": [
+                    "keep",
+                    "skip",
+                    "note"
+                  ]
+                },
+                "vars": {
+                  "maxItems": 4,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "maxLength": 20
+                      },
+                      "value": {
+                        "type": "string",
+                        "maxLength": 60
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "label"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "cells",
+          "frames"
+        ],
+        "additionalProperties": false,
+        "description": "An interactive step-through of an algorithm or loop. Show the sequence being walked as cells, and one frame per meaningful step: which index is active, which it's compared against, the verdict, and the variables after the step. ALWAYS prefer this over Table for loops, recursion, and pointer algorithms."
+      },
+      "Reveal": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "answer": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "prompt",
+          "answer"
+        ],
+        "additionalProperties": false,
+        "description": "A prediction moment: pose a short question the student should answer in their head, hidden answer behind a click. Use once per explanation, at the point where guessing teaches the most — e.g. 'what does this return for [3,5,2]?'"
       },
       "Flow": {
         "type": "object",
