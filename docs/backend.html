@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillForge — how the backend works</title>
+<style>
+  :root{
+    --void:#08090a; --carbon:#0f1011; --obsidian:#161718; --graphite:#23252a;
+    --smoke:#383b3f; --ash:#62666d; --fog:#8a8f98; --mist:#d0d6e0;
+    --bone:#e5e5e6; --paper:#fff; --lime:#e4f222; --green:#27a644;
+    --violet:#8b8df5; --teal:#38c6d8; --red:#eb5757;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--void); color:var(--mist);
+    font:15px/1.6 -apple-system,"Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:48px 24px 96px;
+  }
+  main{max-width:1060px;margin:0 auto}
+  h1{font-size:34px;font-weight:590;letter-spacing:-.02em;color:var(--paper)}
+  h2{font-size:22px;font-weight:590;letter-spacing:-.015em;color:var(--paper);margin:0 0 6px}
+  .eyebrow{font:590 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:10px}
+  .lede{color:var(--fog);max-width:70ch}
+  section{margin-top:72px}
+  .card{background:var(--carbon);border:1px solid var(--graphite);border-radius:12px;overflow:hidden}
+  .card>header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 16px;border-bottom:1px solid var(--graphite);font-size:13px;color:var(--mist)}
+  .card>header .aside{font:12px var(--mono);color:var(--ash)}
+  .pad{padding:16px}
+  code,.mono{font-family:var(--mono);font-size:.92em}
+  .k{color:var(--fog)} .v{color:var(--paper)}
+  .file{font:12px var(--mono);color:var(--ash)}
+  a{color:var(--mist)}
+
+  /* legend + node types */
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:12.5px;color:var(--fog)}
+  .legend span{display:flex;align-items:center;gap:8px}
+  .sw{width:22px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--graphite)}
+  .sw.det{background:var(--obsidian)}
+  .sw.llm{background:rgba(139,141,245,.14);border-color:rgba(139,141,245,.55);border-style:dashed}
+  .sw.ext{background:rgba(56,198,216,.10);border-color:rgba(56,198,216,.5)}
+  .sw.db{background:rgba(228,242,34,.07);border-color:rgba(228,242,34,.35)}
+
+  .node{background:var(--obsidian);border:1px solid var(--graphite);border-radius:8px;padding:10px 13px}
+  .node b{display:block;font-weight:590;color:var(--paper);font-size:13.5px}
+  .node small{color:var(--fog);font-size:12px;line-height:1.45;display:block;margin-top:3px}
+  .node .file{margin-top:6px;display:block}
+  .node.llm{background:rgba(139,141,245,.08);border-color:rgba(139,141,245,.45);border-style:dashed}
+  .node.llm b{color:var(--violet)}
+  .node.ext{background:rgba(56,198,216,.06);border-color:rgba(56,198,216,.4)}
+  .node.ext b{color:var(--teal)}
+  .node.db{background:rgba(228,242,34,.05);border-color:rgba(228,242,34,.3)}
+  .node.db b{color:var(--lime)}
+  .node.guard{border-color:rgba(39,166,68,.55)}
+  .node.guard b{color:var(--green)}
+
+  .down{display:flex;justify-content:center;color:var(--smoke);font-size:18px;line-height:1;padding:6px 0}
+  .down.note{gap:10px;color:var(--ash);font:12px var(--mono);align-items:center}
+
+  /* system map */
+  .map{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .lane>h3{font:590 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);padding:0 2px 10px}
+  .lane .node{margin-bottom:10px}
+  @media(max-width:820px){.map{grid-template-columns:1fr}}
+
+  /* pipeline */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .branch{border:1px dashed var(--smoke);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--fog)}
+  .branch b{color:var(--mist);font-weight:590}
+
+  /* formulas */
+  .formulae{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .formulae .card .pad{font:13px/1.9 var(--mono)}
+  .formulae .name{color:var(--lime)}
+  .formulae .expr{color:var(--paper)}
+  .formulae small{display:block;color:var(--fog);font-family:inherit;font-size:12px;line-height:1.5;margin-top:6px;font-family:-apple-system,"Segoe UI",sans-serif}
+
+  /* agents table */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;vertical-align:top;padding:10px 12px;border-top:1px solid var(--graphite)}
+  th{font:590 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ash);border-top:none}
+  td b{color:var(--paper);font-weight:590}
+  td{color:var(--fog)}
+  td .mono{color:var(--mist)}
+  .no{color:var(--red)}
+
+  /* lanes (streaming) */
+  .seq{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .seq ol{list-style:none;counter-reset:s}
+  .seq li{counter-increment:s;display:flex;gap:10px;padding:8px 0;border-top:1px solid rgba(35,37,42,.7);font-size:12.5px;color:var(--fog)}
+  .seq li:first-child{border-top:none}
+  .seq li::before{content:counter(s);font:590 11px var(--mono);color:var(--ash);min-width:16px;padding-top:2px}
+  .seq li b{color:var(--mist);font-weight:590}
+
+  /* schema chips */
+  .schema{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font:12px var(--mono);color:var(--mist);background:var(--obsidian);border:1px solid var(--graphite);border-radius:4px;padding:3px 8px}
+  .chip.hot{border-color:rgba(228,242,34,.35);color:var(--bone)}
+
+  .callout{border-left:2px solid var(--green);padding:2px 0 2px 14px;color:var(--fog);font-size:13.5px;max-width:74ch}
+  .callout b{color:var(--paper);font-weight:590}
+  footer{margin-top:80px;color:var(--ash);font-size:12.5px}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="eyebrow">SkillForge · backend deep-dive</span>
+  <h1>The model extracts. Code decides.</h1>
+  <p class="lede" style="margin-top:12px">
+    Every diagram below follows one rule: a language model never produces a number that
+    reaches a screen. It appears exactly once in the analysis, and everything downstream —
+    levels, gaps, weeks, ranks, readiness — is arithmetic over version-controlled benchmarks.
+  </p>
+  <div class="legend">
+    <span><i class="sw det"></i> deterministic TypeScript</span>
+    <span><i class="sw llm"></i> model call (OpenCode Zen, keyless)</span>
+    <span><i class="sw ext"></i> external service</span>
+    <span><i class="sw db"></i> Postgres (Neon, HTTP driver)</span>
+  </div>
+</header>
+
+<!-- ═══════════════════ 1. SYSTEM MAP ═══════════════════ -->
+<section>
+  <span class="eyebrow">01</span>
+  <h2>System map</h2>
+  <p class="lede">Three planes. Requests enter on the left; the pure core in the middle owns every number; agents on the right own every sentence.</p>
+
+  <div class="card" style="margin-top:20px"><div class="pad map">
+    <div class="lane">
+      <h3>Edge — Next.js 16</h3>
+      <div class="node"><b>Pages &amp; server actions</b><small>Server Components by default; every protected resource calls <code>requireAuth()</code> itself — no middleware path-matching.</small><span class="file">src/app/**</span></div>
+      <div class="node"><b>API routes</b><small><code>/api/resume/upload</code> · <code>/api/analysis/[id]</code> · <code>/api/chat</code> · <code>/api/studio</code> · <code>/api/discovery</code> · <code>/api/hello</code></small></div>
+      <div class="node ext"><b>Clerk</b><small>Identity only. The <code>students</code> row owns everything about the student <em>as a student</em>.</small></div>
+    </div>
+    <div class="lane">
+      <h3>The pure core</h3>
+      <div class="node"><b>scoring/</b><small><code>provenLevel</code> · gap · readiness. Pure, monotonic, unit-tested.</small></div>
+      <div class="node"><b>ranking/</b><small>Projects, certs, questions — weighted gap points per unit cost. Rationales are templates over the same numbers.</small></div>
+      <div class="node"><b>scheduling/</b><small>Topological sort over prerequisites, greedy-packed into a weekly-hours budget.</small></div>
+      <div class="node db"><b>Neon Postgres · Drizzle</b><small>27 tables. Stateless HTTP driver — each query is a fetch, so nothing pools and nothing hangs.</small><span class="file">src/db/schema.ts</span></div>
+    </div>
+    <div class="lane">
+      <h3>Agents — Mastra</h3>
+      <div class="node llm"><b>Extractor</b><small>The one model call per analysis. Structured output, no tools.</small></div>
+      <div class="node llm"><b>Mentor · Studio</b><small>Same tools, different medium — prose vs rendered OpenUI components.</small></div>
+      <div class="node llm"><b>Scout · Greeter · Verifier</b><small>Discovery, the landing console, GitHub evidence.</small></div>
+      <div class="node ext"><b>OpenCode Zen</b><small>Free models, <b>no API key</b> — reached via <code>OpenAICompatibleConfig</code>, not Mastra's router (which demands a key the API rejects).</small></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ═══════════════════ 2. THE ANALYSIS PIPELINE ═══════════════════ -->
+<section>
+  <span class="eyebrow">02</span>
+  <h2>An analysis, end to end</h2>
+  <p class="lede">The upload route answers in ~2 s; the pipeline continues inside Vercel's <code>after()</code> while the intake screen polls a progress row.</p>
+
+  <div class="split" style="margin-top:20px">
+    <div>
+      <div class="node"><b>POST /api/resume/upload</b><small>401 without a session · 409 if a run is already in flight · role validated before any write · <code>sha256(bytes)</code> computed for dedup.</small></div>
+      <div class="down">↓</div>
+      <div class="node"><b>Parse — unpdf</b><small>Page/line-indexed text, normalised <em>without changing line counts</em> — indices are load-bearing for citations.</small></div>
+      <div class="down note">↓ <span>no text layer?</span></div>
+      <div class="branch"><b>OCR fallback (optional key)</b> — Firecrawl <code>/v2/parse</code>, only for scans. The one place a resume leaves our infrastructure; off unless configured. Failure degrades to the paste-text path, never to a 500.</div>
+      <div class="down note">↓ <span>same bytes seen before?</span></div>
+      <div class="branch"><b>Cache hit → skip the model entirely.</b> A recognised resume replays its cached evidence through the deterministic core. Sub-second.</div>
+      <div class="down">↓</div>
+      <div class="node llm"><b>Extract — the one model call</b><small>Shown each rubric ladder and asked <em>which rung the evidence supports</em> — never for a score. Returns evidence <b>signals</b> (booleans, counts) and flagged lines as <code>{page, line, quote}</code>.</small></div>
+      <div class="down">↓</div>
+      <div class="node guard"><b>The citation guard</b><small>Each flag's quote is checked against that exact page and line of the source. No match → dropped before persisting. Unknown track ids → dropped. The cheapest anti-hallucination defence in the app.</small><span class="file">src/lib/pdf/extract.ts · verifyQuote()</span></div>
+    </div>
+    <div>
+      <div class="node"><b>Score</b><small><code>provenLevel(signals, rubric)</code> → weighted sum, clamped 0–10, snapped to the ladder. Monotonic: more evidence can never lower a level.</small></div>
+      <div class="down">↓</div>
+      <div class="node"><b>Rank</b><small>Everything is <em>weighted gap points</em>: projects per week of effort (+prior-art bonus), certs minus cost and redundancy ("the CI retrofit proves this for free"), questions ×2 on gap tracks.</small></div>
+      <div class="down">↓</div>
+      <div class="node"><b>Schedule</b><small>Open gaps topologically ordered by prerequisites, packed under the weekly-hours budget; builds land after the gaps they depend on close.</small></div>
+      <div class="down">↓</div>
+      <div class="node db"><b>Persist</b><small>Assessments, roadmap, recommendations, a readiness snapshot — and the <b>extract cache</b>: role-independent signals that make everything below free.</small></div>
+      <div class="down">↓</div>
+      <div class="node"><b>Poll — GET /api/analysis/[id]</b><small>Drives the intake checklist. Also the <b>reaper</b>: a run still "running" after 6 min is marked failed with an honest message — <code>after()</code> can die with its serverless instance, and someone has to notice.</small></div>
+      <div class="down">↓</div>
+      <div class="branch"><b>Role switch = zero model calls.</b> <code>replanRole()</code> re-scores the cached signals against another role's benchmark, re-ranks, re-schedules — one round trip, pure arithmetic. This is the demo beat that proves a model isn't scoring.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 3. THE ARITHMETIC ═══════════════════ -->
+<section>
+  <span class="eyebrow">03</span>
+  <h2>The arithmetic that replaces "AI scoring"</h2>
+  <p class="lede">Published at <code>/benchmarks</code> without an account, where a worked example is computed at render time by the same exported functions.</p>
+
+  <div class="formulae" style="margin-top:20px">
+    <div class="card"><div class="pad">
+      <span class="name">provenLevel</span><br>
+      <span class="expr">clamp(Σ evidence·weight, 0, 10)</span>
+      <small>A claim alone is worth 1 of 10. Shipping beats building; a measured outcome beats both; coursework corroborates but never establishes.</small>
+    </div></div>
+    <div class="card"><div class="pad">
+      <span class="name">gap · weeks</span><br>
+      <span class="expr">gap = max(0, required − proven)</span><br>
+      <span class="expr">weeks = ⌈gap · hoursPerLevel ÷ weeklyHours⌉</span>
+      <small><code>hoursPerLevel</code> is a benchmark column — what turns a gap into a date.</small>
+    </div></div>
+    <div class="card"><div class="pad">
+      <span class="name">readiness</span><br>
+      <span class="expr">100 · (1 − Σw·gap ⁄ Σw·required)</span>
+      <small>Recomputed from stored rows on read, so the map can never disagree with its own gauges. Moves only when a gap closes.</small>
+    </div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 4. AGENTS & BOUNDARIES ═══════════════════ -->
+<section>
+  <span class="eyebrow">04</span>
+  <h2>Six agents, and what each one cannot do</h2>
+  <p class="lede">The "cannot" column is the architecture. Numbers come from tools reading Postgres — never from a model's memory.</p>
+
+  <div class="card" style="margin-top:20px">
+    <table>
+      <tr><th>Agent</th><th>Does</th><th style="width:38%">Structurally cannot</th></tr>
+      <tr><td><b>Extractor</b></td><td>Fills evidence signals; flags weak lines with citations</td><td class="no">Emit a score — the schema has no field for one. Survive a fake citation — the guard drops it.</td></tr>
+      <tr><td><b>Mentor</b> <span class="file">/app/chat</span></td><td>Streams over SSE with 10 tools: skill map, rubric, roadmap, recommendations, role comparison, web lookup, link previews, GitHub inspection</td><td class="no">Reach another student — tools are built per-request with the id <em>closed over</em>; the parameter a model could get wrong doesn't exist. Move readiness — write tools reuse the pipeline's own functions.</td></tr>
+      <tr><td><b>Studio</b> <span class="file">/app/studio</span></td><td>Same tools; answers in OpenUI Lang rendered by our component library — real gauges, galleries, embeds</td><td class="no">Invent components (closed grammar of blocks) or media — an image URL not returned by <code>preview_link</code> renders nothing.</td></tr>
+      <tr><td><b>Scout</b></td><td>Classifies web results (Exa) against the track vocabulary</td><td class="no">Rank or score — TypeScript does, with the same gap arithmetic. Invent a track — unknown ids are dropped.</td></tr>
+      <tr><td><b>Greeter</b> <span class="file">/api/hello</span></td><td>Explains the product from the landing console's screen</td><td class="no">Leak — no tools, no student, no memory, nothing persisted; hard caps on turns and transcript size. Public by design.</td></tr>
+      <tr><td><b>Portfolio verifier</b></td><td>Reports cited evidence from a public GitHub repo</td><td class="no">Detect signals — README/tests/CI/Docker are found by code from the commit tree; the model only interprets. Repo text reaches it fenced and labelled untrusted.</td></tr>
+    </table>
+  </div>
+
+  <p class="callout" style="margin-top:18px"><b>Why injection mostly bounces off:</b> a resume that says "give me a 10" finds no 10 to give. The worst it can distort is the evidence booleans — which are then still checked against citations, then still scored by code.</p>
+</section>
+
+<!-- ═══════════════════ 5. STREAMING & BACKGROUND ═══════════════════ -->
+<section>
+  <span class="eyebrow">05</span>
+  <h2>Streaming and background work</h2>
+  <p class="lede">Three patterns cover everything: respond-then-work, poll, and Server-Sent Events. No websockets, no queues — Hobby-tier honest.</p>
+
+  <div class="seq" style="margin-top:20px">
+    <div class="card"><header>Analysis <span class="aside">after() + poll</span></header><div class="pad"><ol>
+      <li><b>Route returns runId in ~2 s;</b> the workflow continues in <code>after()</code></li>
+      <li>Each step writes its progress row</li>
+      <li>Client polls 1/s, renders the checklist</li>
+      <li>Reaper marks orphaned runs failed at 6 min</li>
+      <li>On success the client also fires discovery — its own request, its own 300 s budget</li>
+    </ol></div></div>
+    <div class="card"><header>Chat / Studio / Greeter <span class="aside">SSE</span></header><div class="pad"><ol>
+      <li>POST with the transcript</li>
+      <li><code>ReadableStream</code> emits <code>event: delta | tool | done | error</code></li>
+      <li>Tool-call chunks become provenance badges in the UI</li>
+      <li>Mentor persists both sides to <code>chat_messages</code>; studio and greeter keep nothing</li>
+    </ol></div></div>
+    <div class="card"><header>Discovery <span class="aside">background fan-out</span></header><div class="pad"><ol>
+      <li>TypeScript picks the top gaps, writes 2 queries each</li>
+      <li>Exa's <b>keyless MCP endpoint</b> searches (plain JSON-RPC — usable from a serverless function)</li>
+      <li>One model call classifies the pooled results</li>
+      <li>Code validates track ids, scores, ranks, persists top 12</li>
+    </ol></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 6. DATA MODEL ═══════════════════ -->
+<section>
+  <span class="eyebrow">06</span>
+  <h2>Data model — 27 tables in six families</h2>
+  <p class="lede">Highlighted chips are the load-bearing ones.</p>
+
+  <div class="schema" style="margin-top:20px">
+    <div class="card"><header>The ruler <span class="aside">seeded, versioned</span></header><div class="pad chips">
+      <span class="chip">roles</span><span class="chip hot">skill_tracks</span><span class="chip hot">role_benchmarks</span><span class="chip">track_prerequisites</span>
+    </div></div>
+    <div class="card"><header>Intake</header><div class="pad chips">
+      <span class="chip">students</span><span class="chip">resumes</span><span class="chip hot">analysis_runs</span><span class="chip">extracted_skills</span><span class="chip">resume_evidence</span><span class="chip">resume_flags</span>
+    </div></div>
+    <div class="card"><header>Measurement</header><div class="pad chips">
+      <span class="chip hot">skill_assessments</span><span class="chip">readiness_snapshots</span><span class="chip">progress_events</span>
+    </div></div>
+    <div class="card"><header>The plan</header><div class="pad chips">
+      <span class="chip">roadmaps</span><span class="chip">roadmap_items</span><span class="chip">roadmap_notes</span>
+    </div></div>
+    <div class="card"><header>Catalogs → picks</header><div class="pad chips">
+      <span class="chip">project_catalog</span><span class="chip">cert_catalog</span><span class="chip">question_bank</span><span class="chip">recommended_*</span><span class="chip">discovered_resources</span>
+    </div></div>
+    <div class="card"><header>Conversation & sharing</header><div class="pad chips">
+      <span class="chip">chat_threads</span><span class="chip">chat_messages</span><span class="chip hot">report_shares</span>
+    </div></div>
+  </div>
+
+  <p class="callout" style="margin-top:18px"><b>Two rows carry the product.</b> <code>analysis_runs.extract_cache</code> holds role-independent evidence — the reason role-switching and re-uploads cost nothing. <code>report_shares</code> points a 128-bit token at a <em>run</em>, not a student, so re-analysing never rewrites a report a recruiter already opened.</p>
+</section>
+
+<!-- ═══════════════════ 7. VERIFICATION ═══════════════════ -->
+<section>
+  <span class="eyebrow">07</span>
+  <h2>How it stays true</h2>
+  <div class="split" style="margin-top:20px">
+    <div class="card"><header>Unit tests <span class="aside">the deterministic core</span></header><div class="pad" style="font-size:13px;color:var(--fog)">
+      Scoring, ranking, scheduling, citation verification, gantt row-packing. Golden fixtures pin the demo student's exact gauges — the regression net for everything a judge will see.
+    </div></div>
+    <div class="card"><header>check:* scripts <span class="aside">the live capabilities</span></header><div class="pad" style="font-size:13px;color:var(--fog)">
+      <code>workflow</code> · <code>mentor</code> · <code>studio</code> · <code>greeter</code> · <code>discovery</code> · <code>portfolio</code> · <code>feed</code> · <code>ocr</code> · <code>models</code> · <code>tools</code> · <code>design</code> — each exercises a real service, because model drift, API format changes and rate limits never show up in a build.
+    </div></div>
+  </div>
+</section>
+
+<footer>
+  SkillForge backend deep-dive · generated from the code as of the current main branch ·
+  companion docs: <span class="mono">TECHSTACK.md</span> (reference) · <span class="mono">docs/AGENT.md</span> (presenting)
+</footer>
+
+</main>
+</body>
+</html>
