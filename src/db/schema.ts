@@ -175,6 +175,10 @@ export const resumes = pgTable(
     /** sha256 of the uploaded bytes — lets an identical re-upload reuse a
      *  prior extraction instead of paying for the model again. */
     contentHash: text("content_hash"),
+    /** How the text was recovered. 'text-layer' means page/line citations map
+     *  to the printed document; 'ocr' and 'pasted' mean the pages are
+     *  synthesised 60-line chunks, and the UI must not pretend otherwise. */
+    source: text("source").notNull().default("text-layer"),
     parseMs: integer("parse_ms").notNull(),
     sectionsFound: integer("sections_found").notNull().default(0),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true })

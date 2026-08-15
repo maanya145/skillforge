@@ -121,6 +121,7 @@ export async function getIntakeDetail(runId: string) {
     db
       .select({
         fileName: schema.resumes.fileName,
+        source: schema.resumes.source,
         pageCount: schema.resumes.pageCount,
         parseMs: schema.resumes.parseMs,
         uploadedAt: schema.resumes.uploadedAt,

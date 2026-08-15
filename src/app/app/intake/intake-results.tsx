@@ -14,6 +14,14 @@ const KIND_LABEL: Record<string, string> = {
 /** What the latest analysis found — chips, evidence, and the flagged lines. */
 export async function IntakeResults({ runId }: { runId: string }) {
   const { skills, evidence, flags, resume } = await getIntakeDetail(runId)
+
+  // OCR'd photos and pasted text have no real pages — their text is chunked
+  // into synthesised 60-line "pages" so citations stay verifiable. Showing
+  // "p.2 L1" for a one-page photo would be confidently wrong, so those
+  // sources cite a plain global line number instead.
+  const synthesised = resume != null && resume.source !== "text-layer"
+  const cite = (page: number, line: number) =>
+    synthesised ? `L${(page - 1) * 60 + line}` : `p.${page} L${line}`
   if (skills.length + evidence.length + flags.length === 0) return null
 
   return (
@@ -86,7 +94,14 @@ export async function IntakeResults({ runId }: { runId: string }) {
 
         <SubCard>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="t-micro">Flagged lines</span>
+            <span className="t-micro">
+              Flagged lines
+              {synthesised ? (
+                <span className="ml-2 font-normal normal-case text-ash">
+                  · line numbers refer to the recovered text
+                </span>
+              ) : null}
+            </span>
             <Badge variant="err">
               <BadgeDot />
               {flags.length} verified
@@ -99,7 +114,7 @@ export async function IntakeResults({ runId }: { runId: string }) {
                 className="flex gap-3 border-t border-graphite/70 py-2.5 first:border-t-0"
               >
                 <span className="w-13 shrink-0 font-mono text-xs tabular text-ash">
-                  p.{f.page} L{f.line}
+                  {cite(f.page, f.line)}
                 </span>
                 <div className="min-w-0">
                   <p className="text-xs text-mist">

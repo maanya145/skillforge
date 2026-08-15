@@ -275,6 +275,7 @@ export async function POST(request: NextRequest) {
       contentHash,
       parseMs,
       sectionsFound: pagesText.length,
+      source,
     })
     .returning()
 
@@ -420,6 +421,7 @@ async function deferredImageIntake({
       contentHash,
       parseMs: 0,
       sectionsFound: 0,
+      source: "ocr",
     })
     .returning()
 
