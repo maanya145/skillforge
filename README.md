@@ -3,7 +3,7 @@
 Reads a student's resume, measures every skill against the role they're
 actually chasing, and returns the shortest honest path to placement-ready.
 
-Next.js 16 · Mastra · OpenCode Zen (DeepSeek v4) · Neon Postgres + Drizzle ·
+Next.js 16 · Mastra · OpenCode Zen (keyless free tier) · Neon Postgres + Drizzle ·
 Clerk · Tailwind v4 + shadcn/ui
 
 **Setup: [docs/SETUP.md](docs/SETUP.md)** · Tech stack:
