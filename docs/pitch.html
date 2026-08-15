@@ -89,6 +89,19 @@
   .pipe .arr{display:flex;align-items:center;padding:0 8px;color:var(--smoke);font-size:20px}
   @media(max-width:900px){.pipe{flex-direction:column}.pipe .arr{justify-content:center;transform:rotate(90deg);padding:2px 0}}
 
+  /* print — one slide per 16:9 page, colors preserved.
+     Cmd+P from the browser works too; docs/pitch.pdf is rendered from this. */
+  @media print{
+    @page{size:13.333in 7.5in;margin:0}
+    html,body{overflow:visible;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    .slide{position:relative;inset:auto;display:flex !important;height:7.5in;
+           page-break-after:always;break-after:page;padding:0.55in 0.9in;
+           background:var(--void)}
+    .slide:last-of-type{page-break-after:auto}
+    .foot{position:absolute;left:0.9in;bottom:0.55in}
+    #hud{display:none}
+  }
+
   /* chrome */
   #hud{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:center;padding:14px 24px;font:12px var(--mono);color:var(--ash);z-index:5}
   #dots{display:flex;gap:7px}
