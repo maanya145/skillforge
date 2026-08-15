@@ -34,7 +34,8 @@
     "check:greeter": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-greeter.mts",
     "check:jd": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-jd.mts",
     "check:understand": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-understand.mts",
-    "check:problems": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-problems.mts"
+    "check:problems": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-problems.mts",
+    "check:leetcode": "NODE_OPTIONS=\"--dns-result-order=ipv4first --conditions=react-server\" dotenv -e .env.local -e .env -- tsx scripts/check-leetcode.mts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.7.4",
@@ -49,6 +50,7 @@
     "lucide-react": "^1.31.0",
     "next": "16.3.0",
     "next-themes": "^0.4.6",
+    "pdf-lib": "^1.17.1",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",

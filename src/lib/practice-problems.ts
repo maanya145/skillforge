@@ -4,6 +4,11 @@ import { eq } from "drizzle-orm"
 
 import { db, schema } from "@/db"
 import { getLatestRun } from "@/lib/analysis"
+import {
+  fetchLeetcodeTotals,
+  syncLeetcodeSolves,
+  type LeetcodeTotals,
+} from "@/lib/leetcode"
 
 /**
  * The LeetCode drill board: seeded problems ranked against the student's own
@@ -23,17 +28,35 @@ export type DrillProblem = {
   isGapTrack: boolean
   score: number
   solvedAt: Date | null
+  /** 'leetcode' = a verified accepted submission from the connected account. */
+  via: "manual" | "leetcode" | null
 }
 
 export type ProblemBoard = {
   problems: DrillProblem[]
   solvedCount: number
   gapTrackCount: number
+  /** Present once the student has connected their LeetCode account. */
+  leetcode: { username: string; totals: LeetcodeTotals | null } | null
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10
 
 export async function getProblemBoard(studentId: string): Promise<ProblemBoard> {
+  // A connected account syncs on read: recent accepted submissions become
+  // verified solves. Idempotent, and the underlying fetch is cached 15 min,
+  // so most renders never touch LeetCode.
+  const [student] = await db
+    .select({ leetcodeUsername: schema.students.leetcodeUsername })
+    .from(schema.students)
+    .where(eq(schema.students.id, studentId))
+  const username = student?.leetcodeUsername ?? null
+  if (username) {
+    await syncLeetcodeSolves(studentId, username).catch((err) =>
+      console.error("[leetcode] sync failed:", err)
+    )
+  }
+
   const [catalog, attempts, run] = await Promise.all([
     db
       .select({
@@ -68,7 +91,7 @@ export async function getProblemBoard(studentId: string): Promise<ProblemBoard> 
         .where(eq(schema.skillAssessments.runId, run.id))
     : []
   const byTrack = new Map(gauges.map((g) => [g.trackId, g]))
-  const solved = new Map(attempts.map((a) => [a.problemId, a.solvedAt]))
+  const solved = new Map(attempts.map((a) => [a.problemId, a]))
 
   const problems: DrillProblem[] = catalog
     .map((p) => {
@@ -89,7 +112,8 @@ export async function getProblemBoard(studentId: string): Promise<ProblemBoard> 
         pattern: p.pattern,
         isGapTrack,
         score,
-        solvedAt: solved.get(p.id) ?? null,
+        solvedAt: solved.get(p.id)?.solvedAt ?? null,
+        via: (solved.get(p.id)?.via as "manual" | "leetcode" | undefined) ?? null,
       }
     })
     // Unsolved first, highest gap value first, easier first within a tie —
@@ -103,5 +127,8 @@ export async function getProblemBoard(studentId: string): Promise<ProblemBoard> 
     problems,
     solvedCount: solved.size,
     gapTrackCount: problems.filter((p) => p.isGapTrack && !p.solvedAt).length,
+    leetcode: username
+      ? { username, totals: await fetchLeetcodeTotals(username) }
+      : null,
   }
 }

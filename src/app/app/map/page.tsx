@@ -50,11 +50,6 @@ export default async function SkillMapPage() {
     .from(schema.roles)
     .where(eq(schema.roles.id, map.roleId))
 
-  const [benchmark] = await db
-    .select({ sourceNote: schema.roleBenchmarks.sourceNote })
-    .from(schema.roleBenchmarks)
-    .where(eq(schema.roleBenchmarks.roleId, map.roleId))
-    .limit(1)
 
   const blocking = map.gauges.filter((g) => g.status === "open").slice(0, 3)
 
@@ -71,9 +66,6 @@ export default async function SkillMapPage() {
     <Shell
       tools={
         <>
-          <ToolPill className="hidden sm:inline-flex">
-            {benchmark?.sourceNote ?? "Seeded benchmark"}
-          </ToolPill>
           <Badge variant="tag">
             <BadgeDot />
             {role?.name ?? map.roleId}

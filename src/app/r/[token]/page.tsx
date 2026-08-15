@@ -41,7 +41,7 @@ export default async function SharedReportPage({
   // page they clicked.
   after(() => recordShareView(token))
 
-  const { map, roleName, roleBlurb, sourceNote, benchmarkVersion } = report
+  const { map, roleName, roleBlurb, benchmarkVersion } = report
   const blocking = map.gauges.filter((g) => g.status === "open").slice(0, 3)
   const met = map.gauges.length - map.openGaps
 
@@ -66,9 +66,6 @@ export default async function SharedReportPage({
             <AppBar>
               <Crumb trail={["Report"]}>Skill map</Crumb>
               <div className="flex items-center gap-2">
-                <ToolPill className="hidden sm:inline-flex">
-                  {sourceNote}
-                </ToolPill>
                 <Badge variant="tag">
                   <BadgeDot />
                   {roleName}

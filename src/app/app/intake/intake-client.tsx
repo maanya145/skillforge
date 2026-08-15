@@ -174,11 +174,19 @@ export function IntakeClient({
   function choose(selected: File | undefined | null) {
     if (!selected || busy) return
 
-    const looksPdf =
+    const name = selected.name.toLowerCase()
+    const supported =
       selected.type === "application/pdf" ||
-      selected.name.toLowerCase().endsWith(".pdf")
-    if (!looksPdf) {
-      setError("That's not a PDF. Export your resume as PDF, or paste the text.")
+      name.endsWith(".pdf") ||
+      selected.type === "image/png" ||
+      name.endsWith(".png") ||
+      selected.type === "image/jpeg" ||
+      name.endsWith(".jpg") ||
+      name.endsWith(".jpeg")
+    if (!supported) {
+      setError(
+        "Upload a PDF or a PNG/JPG photo of your resume — or paste the text."
+      )
       return
     }
     if (selected.size > MAX_BYTES) {
@@ -261,12 +269,12 @@ export function IntakeClient({
               <p className="text-caption text-mist">
                 {file
                   ? file.name
-                  : "Drop a PDF, or choose one — analysis starts right away"}
+                  : "Drop a PDF or a photo of it — analysis starts right away"}
               </p>
               <p className="font-mono text-xs text-ash">
                 {file
                   ? `${Math.round(file.size / 1024)} KB`
-                  : `Up to ${MAX_MB} MB · text-based PDFs only`}
+                  : `Up to ${MAX_MB} MB · PDF, PNG or JPG`}
               </p>
             </div>
           </div>
@@ -274,7 +282,7 @@ export function IntakeClient({
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,image/png,.png,image/jpeg,.jpg,.jpeg"
             className="sr-only"
             onChange={(e) => choose(e.target.files?.[0])}
             disabled={busy}
@@ -286,7 +294,7 @@ export function IntakeClient({
             disabled={busy}
           >
             <Upload aria-hidden />
-            {busy ? "Analysing…" : file ? "Choose another" : "Choose a PDF"}
+            {busy ? "Analysing…" : file ? "Choose another" : "Choose a file"}
           </Button>
         </SubCard>
       ) : (

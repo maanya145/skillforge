@@ -102,9 +102,6 @@ export default async function BenchmarksPage({
                 <AppBar>
                   <Crumb trail={["Benchmarks"]}>{benchmark.role.name}</Crumb>
                   <div className="flex items-center gap-2">
-                    <ToolPill className="hidden sm:inline-flex">
-                      {benchmark.sourceNote}
-                    </ToolPill>
                     <Badge variant="tag">
                       <BadgeDot />v{benchmark.version}
                     </Badge>

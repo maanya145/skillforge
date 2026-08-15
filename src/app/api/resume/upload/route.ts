@@ -11,7 +11,8 @@ import {
   ResumeParseError,
   type ExtractedResume,
 } from "@/lib/pdf/extract"
-import { ocrResume } from "@/lib/pdf/firecrawl"
+import { ocrResume, ocrConfigured } from "@/lib/pdf/firecrawl"
+import { wrapImageAsPdf, imageMimeFor } from "@/lib/pdf/image-to-pdf"
 import { replanRole } from "@/lib/replan"
 import { mastra } from "@/mastra"
 
@@ -165,9 +166,13 @@ export async function POST(request: NextRequest) {
     }
     const looksPdf =
       file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
-    if (!looksPdf) {
+    const imageMime = looksPdf ? null : imageMimeFor(file)
+    if (!looksPdf && !imageMime) {
       return Response.json(
-        { error: "That's not a PDF. Export your resume as PDF and try again." },
+        {
+          error:
+            "That file type isn't supported. Upload a PDF, a PNG or JPG photo of your resume — or paste the text.",
+        },
         { status: 415 }
       )
     }
@@ -184,22 +189,49 @@ export async function POST(request: NextRequest) {
     contentHash = createHash("sha256").update(bytes).digest("hex")
 
     let parsed: ExtractedResume | null = null
-    try {
-      parsed = await extractResume(bytes)
-    } catch (err) {
-      if (!(err instanceof ResumeParseError)) throw err
-
-      // No text layer means a scan, a photo or outlined glyphs — precisely the
-      // case OCR exists for. Every other parse failure (encrypted, corrupt) is
-      // not something OCR can rescue, so it goes straight back to the student.
-      if (err.kind === "no-text-layer") {
-        parsed = await ocrResume(bytes, file.name)
-      }
-      if (!parsed) {
+    if (imageMime) {
+      // A photo has no text layer by definition — OCR is the only path, so
+      // fail fast and honestly when it isn't configured rather than trying.
+      if (!ocrConfigured) {
         return Response.json(
-          { error: err.message, kind: err.kind },
+          {
+            error:
+              "Photo uploads need the OCR service, which isn't set up here. Paste your resume text instead.",
+          },
           { status: 422 }
         )
+      }
+      // The OCR service takes PDFs, not raw images: wrap the photo into a
+      // one-page PDF losslessly — embedded bytes, page sized to the image.
+      const wrapped = await wrapImageAsPdf(bytes, imageMime)
+      parsed = await ocrResume(wrapped, file.name.replace(/\.\w+$/, ".pdf"))
+      if (!parsed) {
+        return Response.json(
+          {
+            error:
+              "Couldn't read that photo — try a sharper, straight-on shot, or paste the text.",
+          },
+          { status: 422 }
+        )
+      }
+    } else {
+      try {
+        parsed = await extractResume(bytes)
+      } catch (err) {
+        if (!(err instanceof ResumeParseError)) throw err
+
+        // No text layer means a scan, a photo or outlined glyphs — precisely
+        // the case OCR exists for. Every other parse failure (encrypted,
+        // corrupt) is not something OCR can rescue, so it goes straight back.
+        if (err.kind === "no-text-layer") {
+          parsed = await ocrResume(bytes, file.name)
+        }
+        if (!parsed) {
+          return Response.json(
+            { error: err.message, kind: err.kind },
+            { status: 422 }
+          )
+        }
       }
     }
     pagesText = parsed.pagesText

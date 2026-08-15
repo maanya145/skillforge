@@ -144,6 +144,9 @@ export const students = pgTable(
     college: text("college"),
     gradYear: integer("grad_year"),
     targetRoleId: text("target_role_id").references(() => roles.id),
+    /** Their LeetCode handle, once connected — lets accepted submissions
+     *  verify drill solves instead of taking the student's word for it. */
+    leetcodeUsername: text("leetcode_username"),
     weeklyHours: integer("weekly_hours").notNull().default(9),
     targetDate: date("target_date"),
     horizonWeeks: integer("horizon_weeks").notNull().default(14),
@@ -649,6 +652,10 @@ export const problemAttempts = pgTable(
     solvedAt: timestamp("solved_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /** 'manual' = the student's word; 'leetcode' = a verified accepted
+     *  submission pulled from their connected account. Verified marks can't
+     *  be un-ticked by hand — the submission happened. */
+    via: text("via").notNull().default("manual"),
   },
   (t) => [primaryKey({ columns: [t.studentId, t.problemId] })]
 )

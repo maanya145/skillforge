@@ -7,6 +7,7 @@ import { getRecommendations } from "@/lib/plan-queries"
 import { getDiscoveries } from "@/lib/discovery/discover"
 import { getProblemBoard } from "@/lib/practice-problems"
 import { ProblemList } from "./problem-list"
+import { LeetcodeConnect } from "./leetcode-connect"
 import { getCertInputs } from "@/lib/cert-artifact"
 import { rankCerts, type CertVerdict } from "@/lib/ranking/rank"
 import { ArrowRight } from "lucide-react"
@@ -25,7 +26,6 @@ import { SectionHead } from "@/components/shell/section"
 import { WorkspaceFrame, EmptyState } from "@/components/shell/workspace"
 import { AppHeading, SubCard } from "@/components/shell/frame"
 
-import { QuestionList } from "./question-list"
 
 export const metadata = { title: "Practice · SkillForge" }
 
@@ -66,8 +66,8 @@ export default async function PracticePage() {
       <SectionHead eyebrow="Step 04" title="Practice">
         Every recommendation names the gap it closes and what it&rsquo;s
         worth. Nothing is here because it&rsquo;s popular — the scores are
-        weighted gap points. The questions are archetypes drawn from publicly
-        shared interview experiences, not transcripts.
+        weighted gap points, and the drills are real problems ranked by your
+        open gaps.
       </SectionHead>
 
       <WorkspaceFrame
@@ -75,7 +75,7 @@ export default async function PracticePage() {
         trail={["Workspace"]}
         crumb="Practice"
       >
-        {!recs || recs.projects.length + recs.questions.length === 0 ? (
+        {!recs || recs.projects.length === 0 ? (
           <EmptyState
             title="Nothing ranked yet"
             action={
@@ -84,8 +84,8 @@ export default async function PracticePage() {
               </Button>
             }
           >
-            Projects, certifications and interview questions are scored against
-            your open gaps, so they stay empty until a skill map exists.
+            Projects, certifications and drills are scored against your open
+            gaps, so they stay empty until a skill map exists.
           </EmptyState>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -135,6 +135,9 @@ export default async function PracticePage() {
                 >
                   LeetCode drills
                 </AppHeading>
+                <div className="mb-3">
+                  <LeetcodeConnect connected={board.leetcode} />
+                </div>
                 <ProblemList
                   problems={board.problems.map((p) => ({
                     id: p.id,
@@ -145,33 +148,15 @@ export default async function PracticePage() {
                     pattern: p.pattern,
                     isGapTrack: p.isGapTrack,
                     solvedAt: p.solvedAt ? p.solvedAt.toISOString() : null,
+                    via: p.via,
                   }))}
                 />
                 <p className="mt-2 border-t border-graphite px-1 pt-2 text-xs text-ash">
                   Real problems, hand-mapped to your tracks and ranked by your
-                  open gaps. Solving builds the habit trail &mdash; readiness
+                  open gaps. A connected LeetCode account verifies solves from
+                  your accepted submissions &mdash; and either way, readiness
                   moves only when a gap closes.
                 </p>
-              </div>
-
-              <div>
-                <AppHeading aside="patterns, not transcripts">
-                  Interview drill
-                </AppHeading>
-                <QuestionList
-                  questions={recs.questions.map((q) => ({
-                    questionId: q.questionId,
-                    prompt: q.prompt,
-                    topic: q.topic,
-                    company: q.company,
-                    round: q.round,
-                    year: q.year,
-                    isGapTrack: q.isGapTrack,
-                    coachNote: q.coachNote,
-                    outline: q.outline,
-                    status: q.status,
-                  }))}
-                />
               </div>
 
               {/* The artifact's preview card. The decision itself lives on its

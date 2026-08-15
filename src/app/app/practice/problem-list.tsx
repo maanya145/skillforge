@@ -18,6 +18,7 @@ export type ProblemRow = {
   pattern: string
   isGapTrack: boolean
   solvedAt: string | null
+  via: "manual" | "leetcode" | null
 }
 
 const DIFFICULTY = {
@@ -114,6 +115,12 @@ export function ProblemList({ problems }: { problems: ProblemRow[] }) {
                   {p.isGapTrack ? <BadgeDot /> : null}
                   {p.trackName}
                 </Badge>
+                {solved && p.via === "leetcode" ? (
+                  <Badge variant="ok">
+                    <BadgeDot />
+                    verified
+                  </Badge>
+                ) : null}
                 <span className="truncate text-xs text-ash">{p.pattern}</span>
               </div>
             </div>
